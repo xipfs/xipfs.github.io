@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="深入理解 Kubernetes 概述, TYPEOF">
+    <meta name="keywords" content="椭圆曲线, TYPEOF">
     <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -16,7 +16,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>深入理解 Kubernetes 概述 | TYPEOF</title>
+    <title>椭圆曲线 | TYPEOF</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
@@ -309,12 +309,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/7.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/22.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">深入理解 Kubernetes 概述</h1>
+                    <h1 class="description center-align post-title">椭圆曲线</h1>
                 </div>
             </div>
         </div>
@@ -431,8 +431,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/Kubernetes/">
-                                <span class="chip bg-color">Kubernetes</span>
+                            <a href="/tags/blockchain/">
+                                <span class="chip bg-color">blockchain</span>
                             </a>
                         
                     </div>
@@ -443,8 +443,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                Kubernetes
+                            <a href="/categories/blockchain/" class="post-category">
+                                blockchain
                             </a>
                         
                     </div>
@@ -456,28 +456,28 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-05-21
+                    2020-07-21
                 </div>
                 
 
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-check fa-fw"></i>更新日期:&nbsp;&nbsp;
-                    2020-06-02
+                    2020-09-18
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    1.2k
+                    2.8k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    4 分
+                    11 分
                 </div>
                 
 
@@ -492,58 +492,80 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="Kubernetes-架构设计"><a href="#Kubernetes-架构设计" class="headerlink" title="Kubernetes 架构设计"></a>Kubernetes 架构设计</h1><p><img src="/images/2020/Kubernetes-architecture.png" alt=""></p>
-<h2 id="Kubernetes-流程"><a href="#Kubernetes-流程" class="headerlink" title="Kubernetes 流程"></a>Kubernetes 流程</h2><p><img src="/images/2020/what-happens-when-k8s.png" alt=""></p>
-<h2 id="Kubernetes-核心组件"><a href="#Kubernetes-核心组件" class="headerlink" title="Kubernetes 核心组件"></a>Kubernetes 核心组件</h2><h3 id="Kubectl"><a href="#Kubectl" class="headerlink" title="Kubectl"></a>Kubectl</h3><p>kubectl 是用户与 Kubernetes 交互的命令行工具。用户使用 kubectl 工具调用 Apiserver 的接口来与 Kubernetes服务进行交互。</p>
-<p>更多 kubectl 信息请参考：<a href="k8s2.md">深入理解 Kubernetes 之 Kubectl</a></p>
-<h3 id="Kube-API-server"><a href="#Kube-API-server" class="headerlink" title="Kube API server"></a>Kube API server</h3><p>Kubernetes API server 为 api 对象验证并配置数据，包括 pods、 services、 replicationcontrollers 和其它 api 对象。API Server 提供 REST 操作和到集群共享状态的前端，所有其他组件通过它进行交互，是整个系统的数据总线和数据中心。</p>
-<p>Kubernetes 中的其它组件都不会和 etcd 进行交互，只有 API Server 可以和 etcd 进行交互,API Server  具有如下功能：</p>
+                <p>本文主要描述<code>椭圆曲线密码学</code>及<code>数字签名</code>相关的理论</p>
+<h2 id="椭圆曲线密码学"><a href="#椭圆曲线密码学" class="headerlink" title="椭圆曲线密码学"></a>椭圆曲线密码学</h2><p>椭圆曲线密码学(ECC, Elliptic Curve Cryptography)是基于椭圆曲线数学的一种公钥加密方法。</p>
+<h3 id="什么是公钥加密方法"><a href="#什么是公钥加密方法" class="headerlink" title="什么是公钥加密方法"></a>什么是公钥加密方法</h3><p>在如 <code>DES</code>、<code>AES</code> 这类对称密码系统中，信息的发送方使用一把密钥进行加密，接收方使用<strong>相同的</strong>密钥进行解密。<br>而在公钥加密方法中，信息的加密和解密使用的密钥是不同的，称之为<code>公钥</code>和<code>私钥</code>（注：既可以公钥加密私钥解密，也可以私钥加密公钥解密），常用的公钥加密方法有</p>
 <ul>
-<li>整个集群管理的 API 接口：所有对集群进行的查询和管理都是通过 API 进行</li>
-<li>集群内部各个模块之间通信的枢纽：所有模块之间并不会互相调用，而是通过和 API Serve r打交道完成这部分的工作</li>
-<li>集群的安全控制: API Server 提供的验证和授权和访问控制保证了整个集群的安全</li>
+<li><code>RSA</code> - 基于大因数分解</li>
+<li><code>ECC</code> - 基于椭圆曲线和离散对数</li>
 </ul>
-<p>更多 Kube API server 信息请参考：<a href="k8s3.md">深入理解 Kubernetes 之 Kube API server</a></p>
-<h3 id="Controller-manager"><a href="#Controller-manager" class="headerlink" title="Controller manager"></a>Controller manager</h3><p>Controller Manager 就是集群内部的管理控制中心，由负责不同资源的多个 Controller 构成，共同负责集群内的 Node、Pod 等所有资源的管理，比如当通过 Deployment 创建的某个 Pod 发生异常退出时，RS Controller 便会接受并处理该退出事件，并创建新的 Pod 来维持预期副本数。</p>
-<p>几乎每种特定资源都有特定的 Controller 维护管理以保持预期状态，而 Controller Manager 的职责便是把所有的 Controller 聚合起来：</p>
+<p>两者都基于数学上一种双向运算,但这种运算一个方向计算容易，反方向计算却十分困难。以RSA背后的因数大数分解理论为例：<br>笔算完成下面的等式：<br>$$ 373 \times751 = ？$$<br>如果你用笔在纸上画画 ，会发现这并不是很困难，那么如果是下面的等式呢？<br>$$ 280123 = ？\times ？ $$<br>太困难了 ! 即使是使用计算器，我觉得也没有谁一时半会儿也算不出来。</p>
+<p>答案是 $373 \times 751 =  280123$ ，这就是<code>RSA</code>的理论基础，两个质数(素数)的乘积很容易计算，但要将一个这样的乘积分解回去就困难了。<code>ECC</code>采用的与之类似,不同的是它采用的是离散对数问题(DLP，Discrete Logarithm Problem)制造单向计算的困难(稍后有例子)。</p>
+<h3 id="什么是椭圆曲线"><a href="#什么是椭圆曲线" class="headerlink" title="什么是椭圆曲线"></a>什么是椭圆曲线</h3><p>我们在中学课本里一定都学过椭圆的定义。如下图所示，<br><img src="https://s2.ax1x.com/2019/10/10/u7wn6f.md.png" alt="ecc"><br>椭圆上的点都满足  $ax^2 + by^2= c \quad  over , \mathbb  R$</p>
+<p>而密码学中的<strong>椭圆曲线</strong>是满足以下等式的点组成的集合:</p>
+<p>$$<br>y^2 \equiv x^3 + ax + b \pmod p  \quad x,y \in \Bbb Z_p<br>$$</p>
+<p><strong>加上</strong>一个想象中的无穷远点 $\mathscr O$ ，其中 $x,y$的取值范围是 $\Bbb Z_p = { 1,2,3…p-1}$ 并且，上面的等式需要满足 $4a^3 + 27b^2 \neq 0 \pmod p$</p>
+<p>eg. 椭圆曲线<br>$$E :\quad y^2 ≡ x^3+2x+2 \pmod {17}  \quad x,y \in \Bbb Z_{17} $$</p>
+<p>包含的点有 $(5,1)$ , $(6,3)$ , $(10,6)$  , $(3,1)$ , $(9,16)$ , $(16,13)$ , $(0,6)$ , $(13,7)$ , $(7,6)$ , $(7,11)$ , $(13,10)$ , $(0,11)$ , $(16,4)$ , $(9,1)$ , $(3,16)$ , $(10,11)$ , $(6,14)$ , $(5,16)$ 以及 $\mathscr O$。上面的点除了 $\mathscr O$以外，它们是下面曲线上的一些离散的点：<br><img src="https://s2.ax1x.com/2019/10/10/u7wm1P.md.png" alt="ecc2"></p>
+<p>$$E :\quad y^2 ≡ x^3+2x+2 \pmod {17}  \quad x,y \in \Bbb R $$</p>
+<p>显然,这条曲线是关于 $x$轴对称的，但上面的点的 $y$ 坐标都大于0，这是由于$x,y \in \Bbb Z_{17}$ 。举例来说点 $(5,1)$ 和 $(5,16)$实际上就是关于$x$轴对称的。因为 $16\equiv-1 \pmod {17}$，而$(5,-1)$也满足 $y^2 ≡ x^3+2x+2 \pmod {17}  \quad x,y \in \Bbb R$。<br>.</p>
+<h4 id="椭圆曲线上的运算规则"><a href="#椭圆曲线上的运算规则" class="headerlink" title="椭圆曲线上的运算规则"></a>椭圆曲线上的运算规则</h4><p>椭圆曲线上的点构成的集合中只有一种运算，那就是<code>加法</code>(常数与点的<code>乘法</code>可以看做多个加法)，两个点可以进行加法运算得到第三个点，注意，这里的<code>加法</code>不是简单的平面坐标系横纵坐标的相加(这样相加的结果得到的坐标很有可能不在曲线上)。<br>假设$P=(x_1,y_1)$和$Q=(x_2,y_2)$ 都在曲线上，如何得到$R=(x_3,y_3)$ 使得<br>$$P+Q=R  \ (x_1,y_1)+(x_2,y_2)=(x_3,y_3)$$<br>我们从<strong>几何学</strong>上定义这种<code>加法</code>，有两种情况：</p>
+<ul>
+<li>两个不同的点相加 $P+Q$  且 $P \neq  Q$ </li>
+</ul>
+<p><img src="https://s2.ax1x.com/2019/10/10/u7wl7Q.md.png" alt="P+Q"><br>将 $P$ 和 $Q$ 相连的线段延伸，与椭圆曲线有一个交点，该交点关于$x$轴的对称点就是所求的$P+Q$ </p>
+<ul>
+<li>一个点自加 $P+P$ </li>
+</ul>
+<p><img src="https://s2.ax1x.com/2019/10/10/u7wuX8.md.png" alt="P+P"></p>
+<p>作$P$在椭圆曲线上的切线，这条切线与椭圆曲线有一个交点，该交点关于$x$轴的对称点就是所求的$2P$ </p>
+<p>经过一些数学推导，可以得到计算$R(x_3,y_3)$坐标的公式</p>
+<p>$$ x_3 = s^2−x_1−x_2 \pmod p  \<br> y_3 = s(x_1−x_3)−y_1 \pmod p $$<br> 其中<br>$$<br>s =  \left{<br>             \begin{array}{lr}<br>             \dfrac{y_1-y_2}{x_1-x_2} \pmod p ; \quad P \neq Q   \<br>             \dfrac{3x_1^2 +ａ}{2y_1} \pmod p ; \quad P = Q<br>             \end{array}<br>            \right.<br>$$</p>
+<p>还有几个公式，对于$P(x_p,y_p)$<br>$$<br>P+\mathscr O = P \<br>P+(-P) = \mathscr O  \<br>-P = (x_p , p-y_p )<br>$$</p>
+<h4 id="生成元"><a href="#生成元" class="headerlink" title="生成元"></a>生成元</h4><p>椭圆曲线上所有点加上$\mathscr O$ 包含了很多循环子群(cyclic subgroups) ，其中一个循环子群就是自身，本文仅考虑这种情形。<br> 循环子群中的 <code>生成元</code>(Generator)也被称作素元(primitive element)，通过不断自加，它可以<strong>“生成”</strong>群众其他所有元素。那么对本文来说，就是椭圆曲线上的一个点$P$，通过不断自加，它可以生成椭圆曲线上所有点。<br>即椭圆曲线上 = ${ P、2P、3P、….nP}$，其中$n$为循环子群的阶。</p>
+<p>再以刚才的例子举例， $$E :\quad y^2 ≡ x^3+2x+2 \pmod {17}  \quad x,y \in \Bbb Z_{17} $$</p>
+<p>曲线上的所有点就可以表示为 $P$ 的倍数<br> $P=(5,1) \quad 2P=(6,3)\quad3P=(10,6)\quad4P=(3,1)\quad5P=(9,16)\quad6P=(16,13)<br>\quad 7P=(0,6)$<br> $8P=(13,7)\quad9P=(7,6)\quad10P=(7,11)\quad11P=(13,10)\quad12P=(0,11)\quad13P=(16,4)$<br> $14P=(9,1)\quad15P=(3,16)\quad16P=(10,11)\quad17P=(6,14)\quad18P=(5,16)\quad19P=\mathscr O$</p>
+<h4 id="私钥与公钥"><a href="#私钥与公钥" class="headerlink" title="私钥与公钥"></a>私钥与公钥</h4><p>椭圆曲线密码系统使用<code>离散对数问题(DLP)</code>构建公钥密码方法，基于以下两个事实：</p>
 <ol>
-<li>提供基础设施降低 Controller 的实现复杂度</li>
-<li>启动和维持 Controller 的正常运行</li>
+<li>计算生成元与一个数$d$的乘积很容易  $dP =?$ 很容易 (Double-and-Add算法)</li>
+<li>计算一个点由是由哪个数与生成元相乘得到的很困难  $B = ？P$</li>
 </ol>
-<p>可以这么说，Controller 保证集群内的资源保持预期状态，而 Controller Manager 保证了 Controller 保持在预期状态。</p>
-<p>更多 Controller manager 信息请参考：<a href="k8s4.md">深入理解 Kubernetes 之 Controller manager</a></p>
-<h3 id="Scheduler"><a href="#Scheduler" class="headerlink" title="Scheduler"></a>Scheduler</h3><p>调度是 Kubernetes 集群中进行容器编排工作最重要的一环，在 Kubernetes中，Controller manager 负责创建Pod，Kubelet 负责执行 Pod，而 Scheduler 就是负责安排 Pod 到具体的 Node，它通过 API Server 提供的接口监听 Pod 任务列表，获取待调度 pod，然后根据一系列的预选策略和优选策略给各个 Node 节点打分，然后将Pod 发送到得分最高的 Node 节点上，由 kubelet 负责执行具体的任务内容。</p>
-<p>更多 Scheduler  信息请参考：<a href="k8s5.md">深入理解 Kubernetes 之 Scheduler </a></p>
-<h3 id="Kubelet"><a href="#Kubelet" class="headerlink" title="Kubelet"></a>Kubelet</h3><p>每个Node都会启动一个kubelet，主要作用有：</p>
-<ul>
-<li><p>Node管理</p>
-<ul>
-<li><p>注册节点信息；</p>
-</li>
-<li><p>通过 cAdvisor 监控容器和节点的资源；</p>
-</li>
-<li><p>定期向 API server 汇报本节点资源消耗情况</p>
-</li>
-</ul>
-</li>
-<li><p>Pod管理</p>
-</li>
-<li><p>所有非通过 API server 方式创建的 Pod 叫 Static Pod，这里我们讨论的都是通过 API server 创建的普通Pod。kubelet 通过 API server 监听 etcd，所有针对 Pod 的操作都会被监听到，如果其中有涉及到本节点的 Pod，则按照要求进行创建、修改、删除等操作。</p>
-</li>
-<li><p>容器健康检查</p>
-<p>kubelet通过两类探针检查容器的状态：</p>
-<ul>
-<li><p>LivenessProbe：判断一个容器是否健康，如果不健康则会删除这个容器，并按照 restartPolicy 看是否重启这个容器。实现的方式有 ExecAction（在容器内部执行一个命令）、TCPSocketAction（如果端口可以被访问，则健康）、HttpGetAction（如果返回200则健康）。</p>
-</li>
-<li><p>ReadinessProbe：用于判断容器是否启动完全。如果返回的是失败，则 Endpoint Controller 会将这个Pod 的 Endpoint从Service 的 Endpoint 列表中删除。也就是，不会有请求转发给它。</p>
-</li>
-</ul>
-</li>
-</ul>
-<p>更多 Kubelet信息请参考：<a href="k8s6.md">深入理解 Kubernetes 之 Kubelet</a></p>
-<h3 id="Kube-proxy"><a href="#Kube-proxy" class="headerlink" title="Kube proxy"></a>Kube proxy</h3><p>每个 Node 上都运行着一个 kube-proxy 进程，它在本地建立一个 SocketServer 接收和转发请求，可以看作是Service 的透明代理和负载均衡器，负载均衡策略模式是 Round Robin。也可以设置会话保持，策略使用的是 ClientIP，将同一个 ClientIP 的请求转发同一个 Endpoint 上。</p>
-<p>Service 的 Cluster IP 和 NodePort 等概念都是 kube-proxy 服务通过 iptables 的 NAT 转换实现，iptables 机制针对的是 kube-proxy 监听的端口，所以每个 Node 上都要有 kube-proxy。</p>
-<p>更多 Kube proxy 信息请参考：<a href="k8s7.md">深入理解 Kubernetes 之 Kube proxy</a></p>
+<p>将其类比在我们熟悉的实数域上就是<code>指数运算</code>比<code>对数运算</code>容易得多。这里 $d$ 就是椭圆曲线密码系统中的 <code>私钥</code>，$B$ 就是<code>公钥</code>，这也就是为什么可以用私钥推导出公钥，反之不行的原因。 </p>
+<h4 id="secp256k1"><a href="#secp256k1" class="headerlink" title="secp256k1"></a>secp256k1</h4><p><code>secp256k1</code>是以太坊中使用的椭圆曲线，其参数可以点击<a href="https://en.bitcoin.it/wiki/Secp256k1" target="_blank" rel="noopener">Secp256k1 wiki</a>查看，包括椭圆曲线的系数、生成元等。</p>
+<h2 id="椭圆曲线数字签名"><a href="#椭圆曲线数字签名" class="headerlink" title="椭圆曲线数字签名"></a>椭圆曲线数字签名</h2><h3 id="什么是数字签名"><a href="#什么是数字签名" class="headerlink" title="什么是数字签名"></a>什么是数字签名</h3><p>现实生活中的签名作用是签署者对文件进行授权、防止交易中的抵赖发生。数字签名也有这个效果。<br><img src="https://s2.ax1x.com/2019/10/10/u7wMnS.png" alt="dsa"></p>
+<p><strong>Bob</strong>将原文$x$用特定Hash函数生成摘要$h$， 用<code>私钥</code>加密$h$生成签名$s$，将原文$x$和摘要$s$一起传送给<strong>Alice</strong>。<strong>Alice</strong>收到后$x’$和$s’$，然后用相同的Hash函数将收到消息$x’$生成摘要$h’$，用<strong>Bob</strong>的公钥进行解密得到签名$s’$，如果$s = s’$ 则表示消息是完整的，在传输过程中没有修改。</p>
+<h3 id="椭圆曲线数字签名-1"><a href="#椭圆曲线数字签名-1" class="headerlink" title="椭圆曲线数字签名"></a>椭圆曲线数字签名</h3><p>椭圆曲线数字签名算法(ECDSA)就是利用椭圆曲线加密方法进行数字签名的方法。</p>
+<p>设我们使用的曲线 $$ y^2 \equiv x^3 + ax + b \pmod p  \quad x,y \in \Bbb Z_p$$ ,<br>其生成元$A$的阶数为$q$，<code>私钥</code>为$d$，则<code>公钥</code>$B = dA$</p>
+<h4 id="发送方签名"><a href="#发送方签名" class="headerlink" title="发送方签名"></a>发送方签名</h4><ol>
+<li>选择一个随机的key $k_E$，满足$0&lt;k_E&lt;q$</li>
+<li>计算 $R = k_EA$</li>
+<li>令  $r \equiv x_R \pmod p$ ,即 $r$ 为 $R$ 的 $x$ 坐标对 $p$ 求模</li>
+<li>计算 $s \equiv (h(x) + d \cdot r)k_E^{-1} \pmod q$</li>
+</ol>
+<p>则生成的 $(r,s)$ 就是数字签名。之后发送方将 $(s,(r,s))$ 发送给接收方</p>
+<h4 id="接收方验证"><a href="#接收方验证" class="headerlink" title="接收方验证"></a>接收方验证</h4><ol>
+<li>计算 $u_1  \equiv  s^{-1} \cdot h(x) \pmod q$ <sup><code>注1</code></sup></li>
+<li>计算 $u_2  \equiv  s^{-1} \cdot r \pmod q$</li>
+<li>计算  $P =  u_1A +  u_2B$</li>
+<li>进行验证<br>$$<br>x_P =  \left{<pre><code>     \begin{array}{lr}
+     \equiv r \pmod q  \rightarrow  签名有效   \\
+     \not\equiv r \pmod q  \rightarrow  签名无效
+     \end{array}
+    \right.</code></pre>$$</li>
+</ol>
+<h4 id="理论-不感兴趣可看例子"><a href="#理论-不感兴趣可看例子" class="headerlink" title="理论(不感兴趣可看例子)"></a>理论(不感兴趣可看例子)</h4><p>由 $$s \equiv (h(x) + d \cdot r)k_E^{-1} \pmod q $$<br>两边同时乘以 $k_E \cdot s^{-1}$ 可得 $$k_E \equiv s^{-1}(h(x) + d \cdot r) \pmod q $$<br>然后 $$k_E \equiv s^{-1}h(x) + d \cdot s^{-1} \cdot r \pmod q $$<br>即  $$k_E \equiv u_1 + u_2d \pmod q $$<br>同时计算对 生成元$A$的数乘,由于$B = dA$  $$k_EA = u_1A + u_2B  $$<br>即  $$R = u_1A + u_2B  $$<br>所以只要接收方计算的 $P$ 的 $x$ 坐标等于  $R$ 的 $x$ 坐标 $r$ ，则可说明验证通过 (之所以看 $x$ 坐标是因为椭圆曲线中，只凭一个点的 $x$ 坐标并不能唯一确定它的  $y$ 坐标)</p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>以曲线 $E： y^2 \equiv x^3 + 2x + 2 \pmod {17}$ 为例，生成元 $A = (5,1)$<br><img src="https://s2.ax1x.com/2019/10/10/u7wQ0g.md.png" alt="ECDSA"></p>
+<h4 id="数字签名恢复公钥"><a href="#数字签名恢复公钥" class="headerlink" title="数字签名恢复公钥"></a>数字签名恢复公钥</h4><p>在上面的例子中，<strong>Bob</strong> 首先需要向 <strong>Alice</strong> 告知它的<code>公钥</code>，但实际上，我们凭签名 $(r,s)$ 就恢复出公钥， 在以太坊中使用 <strong>/crypto/secp256k1/secp256.go</strong> 中的 <code>RecoverPubkey()</code>函数完成这一功能。</p>
+<h4 id="理论"><a href="#理论" class="headerlink" title="理论"></a>理论</h4><p>接收方收到的信息包括原文和签名：  $(x, (r, s))$ ，从 $x$ 可以计算出 $h(x)$ ，除此之外接收方就只知道椭圆曲线的参数了，如$(a, b, p, q, A)$ ,要注意它<strong>不</strong>知道 $(d, k_E)$，而我们的目标是在不知道 $d$ 的情况下求出  $B$。</p>
+<p>由之前推导出的下式开始  $$k_E \equiv s^{-1}h(x) + d \cdot s^{-1} \cdot r \pmod q $$</p>
+<p>两边同时 $A$ 数乘 得到  $$R = s^{-1}h(x)A + s^{-1}B  $$<br>表示出$B$  $$B= r^{-1}(sR - h(x)A)  $$<br>观察上式可知，只要知道了$R$点坐标，我们就可以算出$B$，但我们没有$R$点坐标，我们有的是它的$x$轴坐标 $r$ <sup><code>注2</code></sup> ，将其代入曲线方程，反解出$R$ 点$y$ 坐标，由于椭圆曲线是关于 $x$ 轴对称的，所以我们可以解出两个符合条件的 $B$。这里我们这里忽略 $r &lt; p - q$ 的情景，这种情况很罕见(在Secp256k1曲线中，大约是 $2^{-128}$)，在这种情况下 ，有两个$x_R$都能满足条件。   </p>
+<h4 id="例子-1"><a href="#例子-1" class="headerlink" title="例子"></a>例子</h4><p>以刚才的椭圆曲线数字签名为例,<strong>Alice</strong> 收到<strong>Bob</strong>带有签名的消息时，她自己有以下信息</p>
+<p>椭圆曲线参数 $E :\quad y^2 ≡ x^3+2x+2 \pmod {17}  \quad x,y \in \Bbb Z_{17}$  生成元 $A = (5, 1)$  阶数 $q = 19$。<br>$(r, s) = (7, 17) \quad  h(x) = 26$</p>
+<p>计算  $h(x)A = 26\times(5,1) = (0,6)$<br>由 $ r = 7 $ ， $7\times11 \equiv 1 \pmod {19}$ 得到 $r^{-1} \equiv 11 \pmod {19}$<br>再将 $ r = 7 $ ，代入曲线方程，得到 $R$ 点的坐标为 $(7,6)$ 或 $(7,11)$</p>
+<p>当 $R=(7,6)$ 时，$sR = 17\times(7,6) = (5, 1)$<br>此时 $B= r^{-1}(sR - h(x)A)  = 11((5,1) - (0,6)) = 11((5,1) + (0,11)) = 11(16, 4) = (7,11)$</p>
+<p>当$R=(7,11)$时，$sR = 17\times(7,11) = (5, 16)$<br>此时 $B= r^{-1}(sR - h(x)A)  = 11((5,16) - (0,6)) = 11((5,16) + (0,11)) = 11(13, 10) = (0,6)$</p>
+<p>最终我们可以得到 两个符合条件的<code>公钥</code> $B = (7,11)$ 和 $B = (0,6)$ , 而无论是哪一个都可以得出相同的签名</p>
+<h2 id="REF"><a href="#REF" class="headerlink" title="REF"></a>REF</h2><p>[1] Understanding Cryptography, Christof Paar / Jan Pelzl<br>[2] <a href="https://en.bitcoin.it/wiki/Secp256k1" target="_blank" rel="noopener">https://en.bitcoin.it/wiki/Secp256k1</a></p>
 <script>
         document.querySelectorAll('.github-emoji')
           .forEach(el => {
@@ -587,7 +609,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://xipfs.github.io/2020/05/21/k8s01/">http://xipfs.github.io/2020/05/21/k8s01/</a>
+                    <a href="http://xipfs.github.io/2020/07/21/2020-09-14-ecc/">http://xipfs.github.io/2020/07/21/2020-09-14-ecc/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -625,8 +647,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/Kubernetes/">
-                                    <span class="chip bg-color">Kubernetes</span>
+                                <a href="/tags/blockchain/">
+                                    <span class="chip bg-color">blockchain</span>
                                 </a>
                             
                         </div>
@@ -798,32 +820,33 @@
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2020/05/21/k8s02/">
+                <a href="/2020/07/21/database/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/18.jpg" class="responsive-img" alt="深入理解 Kubernetes 之 Kubectl">
+                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="数据库学习指南">
                         
-                        <span class="card-title">深入理解 Kubernetes 之 Kubectl</span>
+                        <span class="card-title">数据库学习指南</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            深入理解 Kubectlkubectl 是 Kubernetes 集群的命令行工具，通过 kubectl 能够对集群本身进行管理，并能够在集群上进行容器化应用的安装部署。运行 kubectl 命令的语法如下所示：
-kubectl [comm
+                            DatabasesGeneral
+ 🎥 CMU 15-445 Intro to Database Systems (A Pavlo 2019)
+ 🎥 CMU 15-721 Advanced Database Systems (A Pav
                         
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2020-05-21
+                            <i class="far fa-clock fa-fw icon-date"></i>2020-07-21
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Kubernetes/" class="post-category">
-                                    Kubernetes
+                            <a href="/categories/Database/" class="post-category">
+                                    Database
                                 </a>
                             
                             
@@ -833,8 +856,8 @@ kubectl [comm
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/Kubernetes/">
-                        <span class="chip bg-color">Kubernetes</span>
+                    <a href="/tags/Database/">
+                        <span class="chip bg-color">Database</span>
                     </a>
                     
                 </div>
@@ -848,39 +871,35 @@ kubectl [comm
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2020/05/20/libra/">
+                <a href="/2020/07/17/rust/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="深入理解 Libra">
+                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="Clion 调试 Rust">
                         
-                        <span class="card-title">深入理解 Libra</span>
+                        <span class="card-title">Clion 调试 Rust</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            1. 共识区块链技术中，共识算法是其中核心的一个组成部分。它包含两层含义：
-
-多个节点对某个数据达成一致共识。
-多个节点对多个数据的顺序达成一致共识。
-
-共识算法主要用在以下三种场景：
-
-私链
-私链的共识算法即传统分布式系统里的共识算法，比
+                            安装 mingw安装 msys2 (包含 mingw-64 )
+下载地址  https://www.msys2.org/ 
+开一个 mingw 的终端，安装编译工具：
+ pacman -Syu
+ pacman -S mingw-w64-x8
                         
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-05-20
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-07-17
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/Blockchain/" class="post-category">
-                                    Blockchain
+                            <a href="/categories/Rust/" class="post-category">
+                                    Rust
                                 </a>
                             
                             
@@ -890,12 +909,8 @@ kubectl [comm
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/Blockchain/">
-                        <span class="chip bg-color">Blockchain</span>
-                    </a>
-                    
-                    <a href="/tags/Libra/">
-                        <span class="chip bg-color">Libra</span>
+                    <a href="/tags/Rust/">
+                        <span class="chip bg-color">Rust</span>
                     </a>
                     
                 </div>
