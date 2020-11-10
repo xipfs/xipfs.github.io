@@ -1,0 +1,1896 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="深入理解 Kubernetes 网络模型 自己实现 kube-proxy 的功能, TYPEOF">
+    <meta name="description" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>深入理解 Kubernetes 网络模型 自己实现 kube-proxy 的功能 | TYPEOF</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.css">
+    <link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+    <link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+    <link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/matery.css">
+    <link rel="stylesheet" type="text/css" href="/css/my.css">
+
+    <script src="/libs/jquery/jquery.min.js"></script>
+
+<meta name="generator" content="Hexo 4.2.1"><link rel="alternate" href="/atom.xml" title="TYPEOF" type="application/atom+xml">
+<link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">TYPEOF</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">TYPEOF</div>
+        <div class="logo-desc">
+            
+            Never really desperate, only the lost of the soul.
+            
+        </div>
+    </div>
+
+    
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/1.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">深入理解 Kubernetes 网络模型 自己实现 kube-proxy 的功能</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+<style>
+    #articleContent h1::before,
+    #articleContent h2::before,
+    #articleContent h3::before,
+    #articleContent h4::before,
+    #articleContent h5::before,
+    #articleContent h6::before {
+        display: block;
+        content: " ";
+        height: 100px;
+        margin-top: -100px;
+        visibility: hidden;
+    }
+
+    #articleContent :focus {
+        outline: none;
+    }
+
+    .toc-fixed {
+        position: fixed;
+        top: 64px;
+    }
+
+    .toc-widget {
+        width: 345px;
+        padding-left: 20px;
+    }
+
+    .toc-widget .toc-title {
+        margin: 35px 0 15px 0;
+        padding-left: 17px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    .toc-widget ol {
+        padding: 0;
+        list-style: none;
+    }
+
+    #toc-content {
+        height: calc(100vh - 250px);
+        overflow: auto;
+    }
+
+    #toc-content ol {
+        padding-left: 10px;
+    }
+
+    #toc-content ol li {
+        padding-left: 10px;
+    }
+
+    #toc-content .toc-link:hover {
+        color: #42b983;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+
+    #toc-content .toc-link::before {
+        background-color: transparent;
+        max-height: 25px;
+
+        position: absolute;
+        right: 23.5vw;
+        display: block;
+    }
+
+    #toc-content .is-active-link {
+        color: #42b983;
+    }
+
+    #floating-toc-btn {
+        position: fixed;
+        right: 15px;
+        bottom: 76px;
+        padding-top: 15px;
+        margin-bottom: 0;
+        z-index: 998;
+    }
+
+    #floating-toc-btn .btn-floating {
+        width: 48px;
+        height: 48px;
+    }
+
+    #floating-toc-btn .btn-floating i {
+        line-height: 48px;
+        font-size: 1.4rem;
+    }
+</style>
+<div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                    <div class="article-tag">
+                        
+                            <a href="/tags/Kubernetes/">
+                                <span class="chip bg-color">Kubernetes</span>
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                Kubernetes
+                            </a>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2020-11-02
+                </div>
+                
+
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-check fa-fw"></i>更新日期:&nbsp;&nbsp;
+                    2020-11-10
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
+                    7.8k
+                </div>
+                
+
+                
+                <div class="info-break-policy">
+                    <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
+                    36 分
+                </div>
+                
+
+                
+                    <div id="busuanzi_container_page_pv" class="info-break-policy">
+                        <i class="far fa-eye fa-fw"></i>阅读次数:&nbsp;&nbsp;
+                        <span id="busuanzi_value_page_pv"></span>
+                    </div>
+				
+            </div>
+        </div>
+        <hr class="clearfix">
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <h2 id="深入理解-Kubernetes-网络模型：DIY-kube-proxy"><a href="#深入理解-Kubernetes-网络模型：DIY-kube-proxy" class="headerlink" title="深入理解 Kubernetes 网络模型：DIY kube-proxy"></a>深入理解 Kubernetes 网络模型：DIY kube-proxy</h2><p>Kubernetes 中有几种类型的代理。其中有 <strong>node proxier</strong> 或 <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/" target="_blank" rel="noopener">kube-proxy</a>，它在每个节点上反映 Kubernetes API 中定义的服务，可以跨一组后端执行简单的 TCP/UDP/SCTP 流转发 [1]。</p>
+<p>为了更好地理解节点代理模型，在这篇文章中，我们将用不同的方法设计和实现我们自己版本的 <code>kube-proxy</code>; 尽管这些只是 <code>toy-proxy</code>，但从<strong>透明流量拦截、转发、负载均衡</strong>等方面来说，它们的工作方式与 K8S 集群中运行的普通 <code>kube-proxy</code> 基本相同。</p>
+<p>通过我们的 <code>toy-proxy</code> 程序，非 K8S 节点（不在 K8S 集群中）上的应用程序（无论是宿主本地应用程序，还是在 VM/容器中运行的应用程序）也可以通过 <strong>ClusterIP</strong> 访问 K8S 服务 – <strong>注意，在 kubernetes 的设计中，ClusterIP 只能在 K8S 集群节点中访问（在某种意义上，我们的 <code>toy-proxy</code> 程序将非 K8S 节点变成了 K8S 节点）。</strong></p>
+<h2 id="背景知识"><a href="#背景知识" class="headerlink" title="背景知识"></a>背景知识</h2><p>了解 Linux 内核中的流量拦截和代理需要具备以下背景知识。</p>
+<h3 id="Netfilter"><a href="#Netfilter" class="headerlink" title="Netfilter"></a>Netfilter</h3><p>Netfilter 是 Linux 内核内部的<strong>包过滤和处理框架</strong>。如果你不熟悉 Iptables 和 Netfilter 体系结构，请参阅 <a href="https://www.digitalocean.com/community/tutorials/a-deep-dive-into-iptables-and-netfilter-architecture" target="_blank" rel="noopener">A Deep Dive into Iptables and Netfilter Architecture</a></p>
+<p>一些要点：</p>
+<ul>
+<li>主机上的<strong>所有数据包</strong>都将通过 netfilter 框架</li>
+<li>在 netfilter 框架中有 <strong>5 个钩子</strong>点：<code>PRE_ROUTING</code>, <code>INPUT</code>, <code>FORWARD</code>, <code>OUTPUT</code>, <code>POST_ROUTING</code></li>
+<li>命令行工具 <code>iptables</code> 可用于<strong>动态地将规则插入到钩子点中</strong></li>
+<li>可以通过组合各种 <code>iptables</code> 规则来操作数据包（接受/重定向/删除/修改，等等）</li>
+</ul>
+<img src="/images/2020/proxy_hooks.png">
+
+<p>此外，这 5 个钩子点还可以与内核的其他网络设施，如内核路由子系统进行协同工作。</p>
+<p>此外，在每个钩子点中，规则被组织到具有预定义优先级的不同链中。为了按目的管理链，链被进一步组织到表中。现在有 5 个表：</p>
+<ul>
+<li><code>filter</code>：做正常的过滤，如接受，拒绝/删，跳</li>
+<li><code>nat</code>：网络地址转换，包括 SNAT（源 nat) 和 DNAT（目的 nat)</li>
+<li><code>mangle</code>：修改包属性，例如 TTL</li>
+<li><code>raw</code>：最早的处理点，连接跟踪前的特殊处理 (conntrack 或 CT，也包含在上图中，但这不是链）</li>
+<li><code>security</code>：本文未涉及</li>
+</ul>
+<p>将表/链添加到上图中，我们可以得到更详细的视图：</p>
+<img src="/images/2020/proxy_hooks-and-tables.png">
+
+<h3 id="VIP-与负载均衡-LB"><a href="#VIP-与负载均衡-LB" class="headerlink" title="VIP 与负载均衡 (LB)"></a>VIP 与负载均衡 (LB)</h3><p>虚拟 IP (IP) 将所有后端 IP 隐藏给客户端/用户，因此客户端/用户总是与 VIP 的后端服务通信，而不需要关心 VIP 后面有多少实例。</p>
+<p>VIP 总是伴随着负载均衡，因为它需要在不同的后端之间分配流量。</p>
+<img src="/images/2020/proxy_vip-and-lb.png">
+
+<h3 id="Cross-host-网络模型"><a href="#Cross-host-网络模型" class="headerlink" title="Cross-host 网络模型"></a>Cross-host 网络模型</h3><p>主机 A 上的实例（容器、VM 等）如何与主机 B 上的另一个实例通信？有很多解决方案：</p>
+<ul>
+<li>直接路由：BGP 等</li>
+<li>隧道：VxLAN, IPIP, GRE 等</li>
+<li>NAT：例如 docker 的桥接网络模式</li>
+<li>其它方式</li>
+</ul>
+<h2 id="节点代理模型"><a href="#节点代理模型" class="headerlink" title="节点代理模型"></a>节点代理模型</h2><p>在 kubernetes 中，你可以将应用程序定义为 <code>Service</code>。<code>Service</code> 是一种抽象，它定义了一组 Pods 的逻辑集和访问它们的策略。</p>
+<h3 id="Service-类型"><a href="#Service-类型" class="headerlink" title="Service 类型"></a>Service 类型</h3><p>K8S 中定义了 4 种 <code>Service</code> 类型：</p>
+<ul>
+<li><code>ClusterIP</code>：通过 VIP 访问 Service，但该 VIP 只能在此集群内访问</li>
+<li><code>NodePort</code>：通过 NodeIP:NodePort 访问 Service，这意味着该端口将保留在集群内的所有节点上</li>
+<li><code>ExternalIP</code>：与 <code>ClusterIP</code> 相同，但是这个 VIP 可以从这个集群之外访问</li>
+<li><code>LoadBalancer</code></li>
+</ul>
+<p>这篇文章将关注 <code>ClusterIP</code>，但是其他三种类型在流量拦截和转发方面的底层实现非常相似。</p>
+<h3 id="节点代理"><a href="#节点代理" class="headerlink" title="节点代理"></a>节点代理</h3><p>一个 Service 有一个 VIP（本文中的 <code>ClusterIP</code>）和多个端点（后端 pods）。每个 pod 或节点都可以通过 VIP 直接访问应用程序。要做到这一点，节点代理程序需要在每个节点上运行，它应该能够透明地拦截到任何 <code>ClusterIP:Port</code>[注解 1] 的流量，并将它们重定向到一个或多个后端 pods。</p>
+<img src="/images/2020/proxy_k8s-proxier-model.png">
+
+<blockquote>
+<p>注解 1：</p>
+<p>对 <code>ClusterIP</code> 的一个常见误解是，<code>ClusterIP</code> 是可访问的——它们不是通过定义访问的。如果 ping 一个 <code>ClusterIP</code>，可能会发现它不可访问。</p>
+<p>根据定义，<strong>&lt;Protocol,ClusterIP,Port&gt;</strong> 元组独特地定义了一个服务（因此也定义了一个拦截规则）。例如，如果一个服务被定义为 <code>&lt;tcp,10.7.0.100,80&gt;</code>，那么代理只处理 <code>tcp:10.7.0.100:80</code> 的流量，其他流量，例如。<code>tcp:10.7.0.100:8080</code>, <code>udp:10.7.0.100:80</code> 将不会被代理。因此，也无法访问 ClusterIP（ICMP 流量）。</p>
+<p>但是，如果你使用的是带有 IPVS 模式的 <code>kube-proxy</code>，那么确实可以通过 ping 访问 <code>ClusterIP</code>。这是因为 IPVS 模式实现比定义所需要的做得更多。你将在下面几节中看到不同之处。</p>
+</blockquote>
+<h3 id="节点代理的角色：反向代理"><a href="#节点代理的角色：反向代理" class="headerlink" title="节点代理的角色：反向代理"></a>节点代理的角色：反向代理</h3><p>想想节点代理的作用，在 K8S 网络模型中，它实际上是一个反向代理，也就是说，在每个节点上，它将：</p>
+<ul>
+<li>将所有后端 Pods 隐藏到客户端</li>
+<li>过滤所有出口流量（对后端的请求）</li>
+</ul>
+<p>对于 ingress traffic，它什么也不做。</p>
+<h3 id="性能问题"><a href="#性能问题" class="headerlink" title="性能问题"></a>性能问题</h3><p>如果我们在主机上有一个应用程序，并且在 K8S 集群中有 1K 个服务，那么我们永远无法猜测该应用程序在下一时刻将访问哪个服务（这里忽略网络策略）。因此，为了让应用程序能够访问所有服务，我们必须为节点上的所有服务应用所有代理规则。将这个想法推广到整个集群，这意味着：</p>
+<p><strong>所有服务的代理规则应该应用于整个集群中的所有节点。</strong></p>
+<p>在某种意义上，这是一个完全分布式的代理模型，因为任何节点都拥有集群的所有规则。</p>
+<p>当集群变大时，这会导致严重的性能问题，因为每个节点上可能有数十万条规则 [6,7]。</p>
+<h2 id="测试环境"><a href="#测试环境" class="headerlink" title="测试环境"></a>测试环境</h2><h3 id="集群拓扑和测试环境"><a href="#集群拓扑和测试环境" class="headerlink" title="集群拓扑和测试环境"></a>集群拓扑和测试环境</h3><p>我们将使用以下环境进行测试：</p>
+<ul>
+<li>一个 k8s 集群<ul>
+<li>一个 master 节点</li>
+<li>一个 node 节点</li>
+<li>网络解决方案：直接路由（PodIP 可直接路由）</li>
+</ul>
+</li>
+<li>一个非 k8s 节点，但是它可以到达工作节点和 Pod（得益于直接路由网络方案）</li>
+</ul>
+<img src="/images/2020/proxy_test-env.png">
+
+<p>我们将在工作节点上部署 Pods，并从 test 节点通过 <code>ClusterIP</code> 访问 Pods 中的应用程序。</p>
+<h3 id="创建一个-Service"><a href="#创建一个-Service" class="headerlink" title="创建一个 Service"></a>创建一个 Service</h3><p>创建一个简单的 <code>Statefulset</code>，其中包括一个 <code>Service</code>，该 <code>Service</code> 将有一个或多个后端 Pods:</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># see appendix for webapp.yaml</span>
+$ kubectl create -f webapp.yaml
+
+$ kubectl get svc -o wide webapp
+NAME     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT<span class="token punctuation">(</span>S<span class="token punctuation">)</span>   AGE     SELECTOR
+webapp   ClusterIP   10.7.111.132   <span class="token operator">&lt;</span>none<span class="token operator">></span>        80/TCP    2m11s   app<span class="token operator">=</span>webapp
+
+$ kubectl get pod -o wide <span class="token operator">|</span> <span class="token function">grep</span> webapp
+webapp-0    2/2     Running   0    2m12s 10.5.41.204    node1    <span class="token operator">&lt;</span>none<span class="token operator">></span>  <span class="token operator">&lt;</span>none<span class="token operator">></span></code></pre>
+<p>应用程序在带有 tcp 协议的 80 端口上运行。</p>
+<h3 id="可达性测试"><a href="#可达性测试" class="headerlink" title="可达性测试"></a>可达性测试</h3><p>首先访问 PodIP+Port:</p>
+<pre class=" language-bash"><code class="language-bash">$ curl 10.5.41.204:80
+<span class="token operator">&lt;</span><span class="token operator">!</span>DOCTYPE html<span class="token operator">></span>
+<span class="token punctuation">..</span>.
+<span class="token operator">&lt;</span>/html<span class="token operator">></span></code></pre>
+<p>成功的！然后用 <code>ClusterIP</code> 替换 PodIP 再试一次：</p>
+<pre class=" language-bash"><code class="language-bash">$ curl 10.7.111.132:80
+^C</code></pre>
+<p>正如所料，它是不可访问的！</p>
+<p>在下一节中，我们将研究如何使用不同的方法使 <code>ClusterIP</code> 可访问。</p>
+<h2 id="实现：通过-userspace-socket-实现-proxy"><a href="#实现：通过-userspace-socket-实现-proxy" class="headerlink" title="实现：通过 userspace socket 实现 proxy"></a>实现：通过 userspace socket 实现 proxy</h2><h3 id="中间人模型"><a href="#中间人模型" class="headerlink" title="中间人模型"></a>中间人模型</h3><p>最容易理解的实现是在此主机上的通信路径中插入我们的 <code>toy-proxy</code> 作为中间人：对于从本地客户端到 ClusterIP:Port 的每个连接，<strong>我们拦截该连接并将其分割为两个单独的连接</strong>:</p>
+<ul>
+<li>本地客户端和 <code>toy-proxy</code> 之间的连接</li>
+<li>连接 <code>toy-proxy</code> 和后端 pods</li>
+</ul>
+<p>实现此目的的最简单方法是在用户空间中实现它：</p>
+<ul>
+<li><code>监听资源</code>：启动一个守护进程，监听 K8S apiserver、监视服务 (ClusterIP) 和端点 (Pod) 的变化</li>
+<li><code>代理通信</code>：对于从本地客户端到服务 (ClusterIP) 的每个连接请求，通过充当中间人来拦截请求</li>
+<li><code>动态应用代理规则</code>：对于任何 Service/Endpoint 更新，相应地更改 <code>toy-proxy</code> 连接设置</li>
+</ul>
+<p>对于我们上面的测试应用 <code>webapp</code>，数据流程如下图：</p>
+<img src="/images/2020/proxy_userspace-proxier.png">
+
+<h3 id="POC-实现"><a href="#POC-实现" class="headerlink" title="POC 实现"></a>POC 实现</h3><p>让我们来看看上图的概念验证实现。</p>
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p>以下代码省略了一些错误处理代码，便于阅读：</p>
+<pre class=" language-golang"><code class="language-golang">func main() {
+    clusterIP := "10.7.111.132"
+    podIP := "10.5.41.204"
+    port := 80
+    proto := "tcp"
+
+    addRedirectRules(clusterIP, port, proto)
+    createProxy(podIP, port, proto)
+}
+
+func addRedirectRules(clusterIP string, port int, proto string) error {
+    p := strconv.Itoa(port)
+    cmd := exec.Command("iptables", "-t", "nat", "-A", "OUTPUT", "-p", "tcp",
+        "-d", clusterIP, "--dport", p, "-j", "REDIRECT", "--to-port", p)
+    return cmd.Run()
+}
+
+func createProxy(podIP string, port int, proto string) {
+    host := ""
+    listener, err := net.Listen(proto, net.JoinHostPort(host, strconv.Itoa(port)))
+
+    for {
+        inConn, err := listener.Accept()
+        outConn, err := net.Dial(proto, net.JoinHostPort(podIP, strconv.Itoa(port)))
+
+        go func(in, out *net.TCPConn) {
+            var wg sync.WaitGroup
+            wg.Add(2)
+            fmt.Printf("Proxying %v <-> %v <-> %v <-> %v\n",
+                in.RemoteAddr(), in.LocalAddr(), out.LocalAddr(), out.RemoteAddr())
+            go copyBytes(in, out, &wg)
+            go copyBytes(out, in, &wg)
+            wg.Wait()
+        }(inConn.(*net.TCPConn), outConn.(*net.TCPConn))
+    }
+
+    listener.Close()
+}
+
+func copyBytes(dst, src *net.TCPConn, wg *sync.WaitGroup) {
+    defer wg.Done()
+    if _, err := io.Copy(dst, src); err != nil {
+        if !strings.HasSuffix(err.Error(), "use of closed network connection") {
+            fmt.Printf("io.Copy error: %v", err)
+        }
+    }
+    dst.Close()
+    src.Close()
+}</code></pre>
+<h4 id="一些解释"><a href="#一些解释" class="headerlink" title="一些解释"></a>一些解释</h4><h5 id="traffic-拦截"><a href="#traffic-拦截" class="headerlink" title="traffic 拦截"></a>traffic 拦截</h5><p>我们想拦截所有发往 <code>ClusterIP:Port</code> 的流量，但是在这个节点上任何设备都没有配置<code>ClusterIP</code>，因此我们无法执行诸如 listen（ClusterIP，Port）之类的操作，那么我们如何才能拦截呢？答案是：使用<code>iptables/netfilter</code> 提供的 <code>REDIRECT</code> 能力。</p>
+<p>以下命令会将所有发往 <code>ClusterIP:Port</code> 的流量定向到 <code>localhost:Port</code>：</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">sudo</span> iptables -t nat -A OUTPUT -p tcp -d <span class="token variable">$CLUSTER_IP</span> --dport <span class="token variable">$PORT</span> -j REDIRECT --to-port <span class="token variable">$PORT</span></code></pre>
+<p>如果你现在不能理解这一点，不要害怕。稍后我们将讨论这个问题。</p>
+<p>通过下面命令的输出来验证这一点：</p>
+<pre class=" language-bash"><code class="language-bash">$ iptables -t nat -L -n
+<span class="token punctuation">..</span>.
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>      destination
+REDIRECT   tcp  --  0.0.0.0/0   10.7.111.132         tcp dpt:80 redir ports 80</code></pre>
+<p>在代码中，函数 <code>addRedirectRules()</code> 包装了上述过程。</p>
+<h5 id="创建-proxy"><a href="#创建-proxy" class="headerlink" title="创建 proxy"></a>创建 proxy</h5><p>函数 <code>createProxy()</code> 创建用户空间代理，并执行双向转发。</p>
+<h4 id="可达性测试-1"><a href="#可达性测试-1" class="headerlink" title="可达性测试"></a>可达性测试</h4><p>编译代码并执行二进制文件：</p>
+<pre class=" language-bash"><code class="language-bash">$ go build toy-proxy-userspace.go
+$ <span class="token function">sudo</span> ./toy-proxy-userspace</code></pre>
+<p>现在测试访问：</p>
+<pre class=" language-bash"><code class="language-bash">$ curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+<span class="token operator">&lt;</span><span class="token operator">!</span>DOCTYPE html<span class="token operator">></span>
+<span class="token punctuation">..</span>.
+<span class="token operator">&lt;</span>/html<span class="token operator">></span></code></pre>
+<p>成功！我们的代理传达的信息是：</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">sudo</span> ./toy-proxy-userspace
+Creating proxy between <span class="token operator">&lt;</span>host ip<span class="token operator">></span>:53912 <span class="token operator">&lt;</span>-<span class="token operator">></span> 127.0.0.1:80 <span class="token operator">&lt;</span>-<span class="token operator">></span> <span class="token operator">&lt;</span>host ip<span class="token operator">></span>:40194 <span class="token operator">&lt;</span>-<span class="token operator">></span> 10.5.41.204:80</code></pre>
+<p>表示，对于原 <code>&lt;host ip&gt;:53912 &lt;-&gt; 10.7.111.132:80</code> 的连接请求，将其拆分为两个连接：</p>
+<ol>
+<li><code>&lt;host ip&gt;:53912 &lt;-&gt; 127.0.0.1:80</code></li>
+<li><code>&lt;host ip&gt;:40194 &lt;-&gt; 10.5.41.204:80</code></li>
+</ol>
+<p>删除这条规则：</p>
+<pre class=" language-bash"><code class="language-bash">$ iptables -t nat -L -n --line-numbers
+<span class="token punctuation">..</span>.
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+num  target     prot opt <span class="token function">source</span>               destination
+2    REDIRECT   tcp  --  0.0.0.0/0   10.7.111.132         tcp dpt:80 redir ports 80
+
+<span class="token comment" spellcheck="true"># iptables -t nat -D OUTPUT &lt;num></span>
+$ iptables -t nat -D OUTPUT 2</code></pre>
+<p>或者删除（刷新）所有规则，如果你把 iptabels 弄的一团糟的情况下：</p>
+<pre class=" language-bash"><code class="language-bash">$ iptables -t nat -F <span class="token comment" spellcheck="true"># delete all rules</span>
+$ iptables -t nat -X <span class="token comment" spellcheck="true"># delete all custom chains</span></code></pre>
+<h4 id="改进"><a href="#改进" class="headerlink" title="改进"></a>改进</h4><p>在这个 <code>toy-proxy</code> 实现中，我们拦截了 <code>ClusterIP:80</code> 到 <code>localhost:80</code>，但是如果该主机上的本机应用程序也想使用 <code>localhost:80</code> 怎么办？此外，如果多个服务都公开 80 端口会怎样？显然，我们需要区分这些应用程序或服务。解决这个问题的正确方法是：为每个代理分配一个未使用的临时端口 TmpPort，拦截 <code>ClusterIP:Port</code> 到 <code>local:TmpPort</code>。例如，app1 使用 10001, app2 使用 10002。</p>
+<p>其次，上面的代码只处理一个后端，如果有多个后端 pods 怎么办？因此，我们需要通过负载均衡算法将请求分发到不同的后端 pods。</p>
+<img src="/images/2020/proxy_userspace-proxier-2.png">
+
+<h4 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h4><p>这种方法非常容易理解和实现，但是，它的性能会很差，因为它必须在两端以及内核和用户空间内存之间复制字节。</p>
+<p>我们没有在这上面花太多时间，如果你感兴趣，可以在这里查看用户空间 <code>kube-proxy</code> 的简单实现。</p>
+<p>接下来，让我们看看实现这个任务的另一种方法。</p>
+<h2 id="实现：通过-iptables-实现-proxy"><a href="#实现：通过-iptables-实现-proxy" class="headerlink" title="实现：通过 iptables 实现 proxy"></a>实现：通过 iptables 实现 proxy</h2><p>用户空间代理程序的主要瓶颈来自内核-用户空间切换和数据复制。<strong>如果我们可以完全在内核空间中实现代理</strong>，它将在性能上大大提高，从而击败用户空间的代理。<code>iptables</code> 可用于实现这一目标。</p>
+<p>在开始之前，让我们首先弄清楚在执行 <code>curl ClusterIP:Port</code> 时的流量路径，然后研究如何使用 <code>iptables</code> 规则使其可访问。</p>
+<h3 id="Host-gt-ClusterIP（单一后端）"><a href="#Host-gt-ClusterIP（单一后端）" class="headerlink" title="Host -> ClusterIP（单一后端）"></a>Host -&gt; ClusterIP（单一后端）</h3><p><code>ClusterIP</code> 不存在于任何网络设备上，所以为了让我们的数据包最终到达后端 Pod，我们需要将 <code>ClusterIP</code> 转换为 PodIP（可路由），即：</p>
+<ul>
+<li>条件：匹配 <code>dst=ClusterIP,proto=tcp,dport=80</code> 的数据包</li>
+<li>操作：将数据包的 IP 报头中的 <code>dst=ClusterIP</code> 替换为 <code>dst=PodIP</code></li>
+</ul>
+<p>用网络术语来说，这是一个网络地址转换 (NAT) 过程。</p>
+<h4 id="在哪里做-DNAT"><a href="#在哪里做-DNAT" class="headerlink" title="在哪里做 DNAT"></a>在哪里做 DNAT</h4><p>通过 curl 查看出口数据包路径（下图展示了数据流向过程）：</p>
+<img src="/images/2020/proxy_host-to-clusterip-dnat.png">
+
+<pre class=" language-bash"><code class="language-bash"><span class="token operator">&lt;</span>curl process<span class="token operator">></span> -<span class="token operator">></span> raw -<span class="token operator">></span> CT -<span class="token operator">></span> mangle -<span class="token operator">></span> dnat -<span class="token operator">></span> filter -<span class="token operator">></span> security -<span class="token operator">></span> snat -<span class="token operator">></span> <span class="token operator">&lt;</span>ROUTING<span class="token operator">></span> -<span class="token operator">></span> mangle -<span class="token operator">></span> snat -<span class="token operator">></span> NIC</code></pre>
+<p>很明显，在 OUTPUT 钩中只有一个 dnat（链），我们可以在其中进行 DNAT。</p>
+<p>让我们看看我们将如何进行黑客入侵。</p>
+<h4 id="检查当前的-NAT-规则"><a href="#检查当前的-NAT-规则" class="headerlink" title="检查当前的 NAT 规则"></a>检查当前的 NAT 规则</h4><p><code>NAT</code> 规则被组织到 <code>nat</code> 表中。检查 <code>nat</code> 表中的当前规则：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># -t &lt;table></span>
+<span class="token comment" spellcheck="true"># -L list rules</span>
+<span class="token comment" spellcheck="true"># -n numeric output</span>
+$ iptables -t nat -L -n
+Chain PREROUTING <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+
+Chain INPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+DOCKER     all  --  0.0.0.0/0    <span class="token operator">!</span>127.0.0.0/8   ADDRTYPE match dst-type LOCAL
+
+Chain POSTROUTING <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span></code></pre>
+<p>输出显示除了与 DOCKER 相关的规则外，没有其他规则。这些 DOCKER 规则是 DOCKER 在安装时插入的，但它们不会影响我们在这篇文章中的实验。所以我们忽略它们。</p>
+<h4 id="增加-DNAT-规则"><a href="#增加-DNAT-规则" class="headerlink" title="增加 DNAT 规则"></a>增加 DNAT 规则</h4><p>为了便于查看，我们不会用 go 代码包装 <code>iptables</code> 命令，而是直接显示命令本身。</p>
+<blockquote>
+<p>注意：在继续之前，请确保删除了在上一节中添加的所有规则。</p>
+</blockquote>
+<p>确认目前无法访问 ClusterIP：</p>
+<pre class=" language-bash"><code class="language-bash">$ curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+^C</code></pre>
+<p>现在添加我们的出口 NAT 规则：</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">cat</span> ENV
+CLUSTER_IP<span class="token operator">=</span>10.7.111.132
+POD_IP<span class="token operator">=</span>10.5.41.204
+PORT<span class="token operator">=</span>80
+PROTO<span class="token operator">=</span>tcp
+
+<span class="token comment" spellcheck="true"># -p               &lt;protocol></span>
+<span class="token comment" spellcheck="true"># -A               add rule</span>
+<span class="token comment" spellcheck="true"># --dport          &lt;dst port></span>
+<span class="token comment" spellcheck="true"># -d               &lt;dst ip></span>
+<span class="token comment" spellcheck="true"># -j               jump to</span>
+<span class="token comment" spellcheck="true"># --to-destination &lt;ip>:&lt;port></span>
+$ iptables -t nat -A OUTPUT -p <span class="token variable">$PROTO</span> --dport <span class="token variable">$PORT</span> -d <span class="token variable">$CLUSTER_IP</span> -j DNAT --to-destination <span class="token variable">$POD_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span></code></pre>
+<p>再次检查规则表：</p>
+<pre class=" language-bash"><code class="language-bash">$ iptables -t nat -L -n
+
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>      destination
+DNAT       tcp  --  0.0.0.0/0   10.7.111.132   tcp dpt:80 to:10.5.41.204:80</code></pre>
+<p>我们可以看到规则已经被添加。</p>
+<h4 id="测试可达性"><a href="#测试可达性" class="headerlink" title="测试可达性"></a>测试可达性</h4><p>现在再一次访问：</p>
+<pre class=" language-bash"><code class="language-bash">$ curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+<span class="token operator">&lt;</span><span class="token operator">!</span>DOCTYPE html<span class="token operator">></span>
+<span class="token punctuation">..</span>.
+<span class="token operator">&lt;</span>/html<span class="token operator">></span></code></pre>
+<p>就是这样！访问成功。</p>
+<p>但是等等！我们期望出口的交通应该是正确的，但我们没有添加任何 NAT 规则的入口路径，怎么可能交通是正常的两个方向？事实证明，当你为一个方向添加一个 NAT 规则时，Linux 内核会自动为另一个方向添加保留规则！这与 conntrack (CT，连接跟踪）模块协同工作。</p>
+<img src="/images/2020/proxy_host-to-clusterip-dnat-ct.png">
+
+<h4 id="清理"><a href="#清理" class="headerlink" title="清理"></a>清理</h4><p>删除这些规则：</p>
+<pre class=" language-bash"><code class="language-bash">$ iptables -t nat -L -n --line-numbers
+<span class="token punctuation">..</span>.
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+num  target     prot opt <span class="token function">source</span>               destination
+2    DNAT       tcp  --  0.0.0.0/0   10.7.111.132   tcp dpt:80 to:10.5.41.204:80
+
+<span class="token comment" spellcheck="true"># iptables -t &lt;table> -D &lt;chain> &lt;num></span>
+$ iptables -t nat -D OUTPUT 2</code></pre>
+<h3 id="Host-gt-ClusterIP-（多个后端）"><a href="#Host-gt-ClusterIP-（多个后端）" class="headerlink" title="Host -> ClusterIP （多个后端）"></a>Host -&gt; ClusterIP （多个后端）</h3><p>在上一节中，我们展示了如何使用一个后端 Pod 执行 NAT。现在让我们看看多后端情况。</p>
+<blockquote>
+<p>注意：在继续之前，请确保删除了在上一节中添加的所有规则。</p>
+</blockquote>
+<h4 id="伸缩-webapp"><a href="#伸缩-webapp" class="headerlink" title="伸缩 webapp"></a>伸缩 webapp</h4><p>首先扩大我们的服务到 2 个后端 pods:</p>
+<pre class=" language-bash"><code class="language-bash">$ kubectl scale sts webapp --replicas<span class="token operator">=</span>2
+statefulset.apps/webapp scaled
+
+$ kubectl get pod -o wide <span class="token operator">|</span> <span class="token function">grep</span> webapp
+webapp-0   2/2     Running   0   1h24m   10.5.41.204    node1    <span class="token operator">&lt;</span>none<span class="token operator">></span> <span class="token operator">&lt;</span>none<span class="token operator">></span>
+webapp-1   2/2     Running   0   11s     10.5.41.5      node1    <span class="token operator">&lt;</span>none<span class="token operator">></span> <span class="token operator">&lt;</span>none<span class="token operator">></span></code></pre>
+<h4 id="通过负载平衡添加-DNAT-规则"><a href="#通过负载平衡添加-DNAT-规则" class="headerlink" title="通过负载平衡添加 DNAT 规则"></a>通过负载平衡添加 DNAT 规则</h4><p>我们需要 <code>iptables</code> 中的 <code>statistic</code> 模块以概率的方式将请求分发到后端 Pods，这样才能达到负载均衡的效果：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># -m &lt;module></span>
+$ iptables -t nat -A OUTPUT -p <span class="token variable">$PROTO</span> --dport <span class="token variable">$PORT</span> -d <span class="token variable">$CLUSTER_IP</span> \
+    -m statistic --mode random --probability 0.5  \
+    -j DNAT --to-destination <span class="token variable">$POD1_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+$ iptables -t nat -A OUTPUT -p <span class="token variable">$PROTO</span> --dport <span class="token variable">$PORT</span> -d <span class="token variable">$CLUSTER_IP</span> \
+    -m statistic --mode random --probability 1.0  \
+    -j DNAT --to-destination <span class="token variable">$POD2_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span></code></pre>
+<p>上面的命令指定在两个 Pods 之间随机分配请求，每个都有 50% 的概率。</p>
+<p>现在检查这些规则：</p>
+<pre class=" language-bash"><code class="language-bash">$ iptables -t nat -L -n
+<span class="token punctuation">..</span>.
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+target  prot opt <span class="token function">source</span>      destination
+DNAT    tcp  --  0.0.0.0/0   10.7.111.132  tcp dpt:80 statistic mode random probability 0.50000000000 to:10.5.41.204:80
+DNAT    tcp  --  0.0.0.0/0   10.7.111.132  tcp dpt:80 statistic mode random probability 1.00000000000 to:10.5.41.5:80</code></pre>
+<img src="/images/2020/proxy_host-to-clusterip-lb-ct.png">
+
+<h4 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h4><p>现在，我们来验证下负载均衡是否生效。我们发出 8 个 请求，并捕获到这个主机通信的真实 PodIPs:</p>
+<p>在测试节点上打开一个 shell:</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token punctuation">{</span>1<span class="token punctuation">..</span>8<span class="token punctuation">}</span><span class="token punctuation">;</span> <span class="token keyword">do</span> curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span> 2<span class="token operator">></span><span class="token operator">&amp;</span>1 <span class="token operator">></span>/dev/null<span class="token punctuation">;</span> <span class="token function">sleep</span> 1<span class="token punctuation">;</span> <span class="token keyword">done</span></code></pre>
+<p>测试节点上的另一个 shell 窗口：</p>
+<pre class=" language-bash"><code class="language-bash">$ tcpdump -nn -i eth0 port <span class="token variable">$PORT</span> <span class="token operator">|</span> <span class="token function">grep</span> <span class="token string">"GET /"</span>
+10.21.0.7.48306 <span class="token operator">></span> 10.5.41.5.80:   <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48308 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48310 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48312 <span class="token operator">></span> 10.5.41.5.80:   <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48314 <span class="token operator">></span> 10.5.41.5.80:   <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48316 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48318 <span class="token operator">></span> 10.5.41.5.80:   <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+10.21.0.7.48320 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1</code></pre>
+<p>在 Pod1 中有 4 次，在 Pod2 中有 4 次，每个 pod 有 50%，这正是我们所期望的。</p>
+<h4 id="清理-1"><a href="#清理-1" class="headerlink" title="清理"></a>清理</h4><pre class=" language-bash"><code class="language-bash">$ iptables -t nat -L -n --line-numbers
+<span class="token punctuation">..</span>.
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+num  target     prot opt <span class="token function">source</span>               destination
+2    DNAT    tcp  --  0.0.0.0/0   10.7.111.132  tcp dpt:80 statistic mode random probability 0.50000000000 to:10.5.41.204:80
+3    DNAT    tcp  --  0.0.0.0/0   10.7.111.132  tcp dpt:80 statistic mode random probability 1.00000000000 to:10.5.41.5:80
+
+$ iptables -t nat -D OUTPUT 2
+$ iptables -t nat -D OUTPUT 3</code></pre>
+<h3 id="Pod-app-A-gt-ClusterIP-app-B"><a href="#Pod-app-A-gt-ClusterIP-app-B" class="headerlink" title="Pod (app A) -> ClusterIP (app B)"></a>Pod (app A) -&gt; ClusterIP (app B)</h3><p>如果想通过 hostA 上的 <code>Pod A</code> 通过 <code>ClusterIP</code> 访问 <code>Pod B</code>，B 的 Pod 驻留在 hostB 上，我们应该做什么？</p>
+<p>实际上，这与 <code>Host -&gt; ClusterIP</code> 情况非常相似，但是有一点需要注意：在执行 NAT 之后，源节点 (hostA) 需要将包发送到目的地 Pod 所在的正确目的地节点 (hostB)。根据不同的跨主机网络解决方案，这有很大不同：</p>
+<ol>
+<li>对于直接路由的情况下，主机只是发送数据包。对应的有这些解决方案：<ul>
+<li>calico + bird</li>
+<li>cilium + kube-router（Cilium BGP 的默认解决方案）</li>
+<li>cilium + bird（实际上这只是我们的测试环境网络解决方案）</li>
+</ul>
+</li>
+<li>对于隧道的情况，每个主机上必须有一个代理，它在 DNAT 之后执行 encap，在 SNAT 之前执行 decap。这些解决方案包括：<ul>
+<li>calico + VxLAN 模式</li>
+<li>flannel + IPIP 模式</li>
+<li>flannel + VxLAN 模式</li>
+<li>cilium + VxLAN 模式</li>
+</ul>
+</li>
+<li>像 aws 的 ENI 模式：类似于直接路由，但不需要 BGP 代理<ul>
+<li>cilium + ENI 模式</li>
+</ul>
+</li>
+</ol>
+<p>下图展示了隧道的情况：</p>
+<img src="/images/2020/proxy_tunneling.png">
+
+<p>代理与隧道相关的职责包括：</p>
+<ul>
+<li><strong>同步所有节点之间的隧道信息</strong>，例如描述哪个实例在哪个节点上的信息</li>
+<li><strong>在 DNAT 之后对 pod 流量执行封装</strong>：对于所有的出口流量，例如来自 hostA 的 <code>dst=&lt;PodIP&gt;</code>，其中 PodIP 在 hostB 上，通过添加另一个头来封装数据包，例如 VxLAN 头，其中封装头有 <code>src=hostA_IP,dst=hostB_IP</code></li>
+<li><strong>在 SNAT 之前对 Pod 流量执行解封装</strong>：解封装每个入口封装的数据包：删除外层（例如 VxLAN 标头）</li>
+</ul>
+<p>同时，主机需要决定：</p>
+<ul>
+<li>哪些数据包应该交给解码器（pod 流量），哪些不应该（例如主机流量）</li>
+<li>哪些包应该封装（pod 流量），哪些不应该（例如主机流量）</li>
+</ul>
+<h3 id="重新构造-iptables-规则"><a href="#重新构造-iptables-规则" class="headerlink" title="重新构造 iptables 规则"></a>重新构造 iptables 规则</h3><blockquote>
+<p>注意：在继续之前，请确保删除了在上一节中添加的所有规则。</p>
+</blockquote>
+<p>当你有大量的 Service 时，每个节点上的 iptables 规则将相当复杂，因此你需要进行一些结构化工作来组织这些规则。</p>
+<p>在本节中，我们将在 nat 表中创建几个专用的 iptables 链，具体如下：</p>
+<ul>
+<li>链 <code>KUBE-SERVICES</code>：拦截 nat 表的输出链中所有到此链的出口流量，如果它们被指定为 ClusterIP，则执行 DNAT</li>
+<li>链 <code>KUBE-SVC-WEBAPP</code>：如果 <code>dst</code>、<code>proto</code> 和 <code>port</code> 匹配，则拦截该链 <code>KUBE-SERVICES</code> 中的所有流量</li>
+<li>链 <code>KUBE-SEP-WEBAPP1</code>：拦截 50% 的流量在 <code>KUBE-SVC-WEBAPP</code> 到这里</li>
+<li>链 <code>KUBE-SEP-WEBAPP2</code>：拦截 50% 的流量在 <code>KUBE-SVC-WEBAPP</code> 到这里</li>
+</ul>
+<p>DNAT 路径现在为：</p>
+<pre class=" language-bash"><code class="language-bash">OUTPUT -<span class="token operator">></span> KUBE-SERVICES -<span class="token operator">></span> KUBE-SVC-WEBAPP --<span class="token operator">></span> KUBE-SEP-WEBAPP1
+                                         \
+                                          \--<span class="token operator">></span> KUBE-SEP-WEBAPP2</code></pre>
+<p>如果你有多个 Service，DNAT 路径如下：</p>
+<pre class=" language-bash"><code class="language-bash">OUTPUT -<span class="token operator">></span> KUBE-SERVICES -<span class="token operator">></span> KUBE-SVC-A --<span class="token operator">></span> KUBE-SEP-A1
+                      <span class="token operator">|</span>              \--<span class="token operator">></span> KUBE-SEP-A2
+                      <span class="token operator">|</span>
+                      <span class="token operator">|</span>--<span class="token operator">></span> KUBE-SVC-B --<span class="token operator">></span> KUBE-SEP-B1
+                      <span class="token operator">|</span>              \--<span class="token operator">></span> KUBE-SEP-B2
+                      <span class="token operator">|</span>
+                      <span class="token operator">|</span>--<span class="token operator">></span> KUBE-SVC-C --<span class="token operator">></span> KUBE-SEP-C1
+                                     \--<span class="token operator">></span> KUBE-SEP-C2</code></pre>
+<p>iptables 命令：</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">cat</span> add-dnat-structured.sh
+<span class="token function">source</span> <span class="token punctuation">..</span>/ENV
+
+<span class="token keyword">set</span> -x
+
+KUBE_SVCS<span class="token operator">=</span><span class="token string">"KUBE-SERVICES"</span>        <span class="token comment" spellcheck="true"># chain that serves as kubernetes service portal</span>
+SVC_WEBAPP<span class="token operator">=</span><span class="token string">"KUBE-SVC-WEBAPP"</span>     <span class="token comment" spellcheck="true"># chain that serves as DNAT entrypoint for webapp</span>
+WEBAPP_EP1<span class="token operator">=</span><span class="token string">"KUBE-SEP-WEBAPP1"</span>    <span class="token comment" spellcheck="true"># chain that performs dnat to pod1</span>
+WEBAPP_EP2<span class="token operator">=</span><span class="token string">"KUBE-SEP-WEBAPP2"</span>    <span class="token comment" spellcheck="true"># chain that performs dnat to pod2</span>
+
+<span class="token comment" spellcheck="true"># OUTPUT -> KUBE-SERVICES</span>
+<span class="token function">sudo</span> iptables -t nat -N <span class="token variable">$KUBE_SVCS</span>
+<span class="token function">sudo</span> iptables -t nat -A OUTPUT -p all -s 0.0.0.0/0 -d 0.0.0.0/0 -j <span class="token variable">$KUBE_SVCS</span>
+
+<span class="token comment" spellcheck="true"># KUBE-SERVICES -> KUBE-SVC-WEBAPP</span>
+<span class="token function">sudo</span> iptables -t nat -N <span class="token variable">$SVC_WEBAPP</span>
+<span class="token function">sudo</span> iptables -t nat -A <span class="token variable">$KUBE_SVCS</span> -p <span class="token variable">$PROTO</span> -s 0.0.0.0/0 -d <span class="token variable">$CLUSTER_IP</span> --dport <span class="token variable">$PORT</span> -j <span class="token variable">$SVC_WEBAPP</span>
+
+<span class="token comment" spellcheck="true"># KUBE-SVC-WEBAPP -> KUBE-SEP-WEBAPP*</span>
+<span class="token function">sudo</span> iptables -t nat -N <span class="token variable">$WEBAPP_EP1</span>
+<span class="token function">sudo</span> iptables -t nat -N <span class="token variable">$WEBAPP_EP2</span>
+<span class="token function">sudo</span> iptables -t nat -A <span class="token variable">$WEBAPP_EP1</span> -p <span class="token variable">$PROTO</span> -s 0.0.0.0/0 -d 0.0.0.0/0 --dport <span class="token variable">$PORT</span> -j DNAT --to-destination <span class="token variable">$POD1_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+<span class="token function">sudo</span> iptables -t nat -A <span class="token variable">$WEBAPP_EP2</span> -p <span class="token variable">$PROTO</span> -s 0.0.0.0/0 -d 0.0.0.0/0 --dport <span class="token variable">$PORT</span> -j DNAT --to-destination <span class="token variable">$POD2_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+<span class="token function">sudo</span> iptables -t nat -A <span class="token variable">$SVC_WEBAPP</span> -p <span class="token variable">$PROTO</span> -s 0.0.0.0/0 -d 0.0.0.0/0 -m statistic --mode random --probability 0.5  -j <span class="token variable">$WEBAPP_EP1</span>
+<span class="token function">sudo</span> iptables -t nat -A <span class="token variable">$SVC_WEBAPP</span> -p <span class="token variable">$PROTO</span> -s 0.0.0.0/0 -d 0.0.0.0/0 -m statistic --mode random --probability 1.0  -j <span class="token variable">$WEBAPP_EP2</span></code></pre>
+<p>现在测试我们设计：</p>
+<pre class=" language-bash"><code class="language-bash">$ ./add-dnat-structured.sh
+++ KUBE_SVCS<span class="token operator">=</span>KUBE-SERVICES
+++ SVC_WEBAPP<span class="token operator">=</span>KUBE-SVC-WEBAPP
+++ WEBAPP_EP1<span class="token operator">=</span>KUBE-SEP-WEBAPP1
+++ WEBAPP_EP2<span class="token operator">=</span>KUBE-SEP-WEBAPP2
+++ <span class="token function">sudo</span> iptables -t nat -N KUBE-SERVICES
+++ <span class="token function">sudo</span> iptables -t nat -A OUTPUT -p all -s 0.0.0.0/0 -d 0.0.0.0/0 -j KUBE-SERVICES
+++ <span class="token function">sudo</span> iptables -t nat -N KUBE-SVC-WEBAPP
+++ <span class="token function">sudo</span> iptables -t nat -A KUBE-SERVICES -p tcp -s 0.0.0.0/0 -d 10.7.111.132 --dport 80 -j KUBE-SVC-WEBAPP
+++ <span class="token function">sudo</span> iptables -t nat -N KUBE-SEP-WEBAPP1
+++ <span class="token function">sudo</span> iptables -t nat -N KUBE-SEP-WEBAPP2
+++ <span class="token function">sudo</span> iptables -t nat -A KUBE-SEP-WEBAPP1 -p tcp -s 0.0.0.0/0 -d 0.0.0.0/0 --dport 80 -j DNAT --to-destination 10.5.41.204:80
+++ <span class="token function">sudo</span> iptables -t nat -A KUBE-SEP-WEBAPP2 -p tcp -s 0.0.0.0/0 -d 0.0.0.0/0 --dport 80 -j DNAT --to-destination 10.5.41.5:80
+++ <span class="token function">sudo</span> iptables -t nat -A KUBE-SVC-WEBAPP -p tcp -s 0.0.0.0/0 -d 0.0.0.0/0 -m statistic --mode random --probability 0.5 -j KUBE-SEP-WEBAPP1
+++ <span class="token function">sudo</span> iptables -t nat -A KUBE-SVC-WEBAPP -p tcp -s 0.0.0.0/0 -d 0.0.0.0/0 -m statistic --mode random --probability 1.0 -j KUBE-SEP-WEBAPP2</code></pre>
+<p>检查这些规则：</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">sudo</span> iptables -t nat -L -n
+<span class="token punctuation">..</span>.
+Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination
+KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0
+
+Chain KUBE-SEP-WEBAPP1 <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:10.5.41.204:80
+
+Chain KUBE-SEP-WEBAPP2 <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:10.5.41.5:80
+
+Chain KUBE-SERVICES <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination
+KUBE-SVC-WEBAPP  tcp  --  0.0.0.0/0            10.7.111.132         tcp dpt:80
+
+Chain KUBE-SVC-WEBAPP <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target     prot opt <span class="token function">source</span>               destination
+KUBE-SEP-WEBAPP1  tcp  --  0.0.0.0/0            0.0.0.0/0            statistic mode random probability 0.50000000000
+KUBE-SEP-WEBAPP2  tcp  --  0.0.0.0/0            0.0.0.0/0            statistic mode random probability 1.00000000000
+$ curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+<span class="token operator">&lt;</span><span class="token operator">!</span>DOCTYPE html<span class="token operator">></span>
+<span class="token punctuation">..</span>.
+<span class="token operator">&lt;</span>/html<span class="token operator">></span></code></pre>
+<p>成功！</p>
+<p>如果你将上面的输出与普通的 <code>kube-proxy</code> 规则进行比较，这两个规则是非常相似的，下面是从启用 <code>kube-proxy</code> 的节点提取的：</p>
+<pre class=" language-bash"><code class="language-bash">Chain OUTPUT <span class="token punctuation">(</span>policy ACCEPT<span class="token punctuation">)</span>
+target         prot opt <span class="token function">source</span>               destination
+KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes <span class="token function">service</span> portals */
+
+Chain KUBE-SERVICES <span class="token punctuation">(</span>2 references<span class="token punctuation">)</span>
+target                     prot opt <span class="token function">source</span>               destination
+KUBE-SVC-YK2SNH4V42VSDWIJ  tcp  --  0.0.0.0/0            10.7.22.18           /* default/nginx:web cluster IP */ tcp dpt:80
+
+Chain KUBE-SVC-YK2SNH4V42VSDWIJ <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target                     prot opt <span class="token function">source</span>               destination
+KUBE-SEP-GL2BLSI2B4ICU6WH  all  --  0.0.0.0/0            0.0.0.0/0            /* default/nginx:web */ statistic mode random probability 0.33332999982
+KUBE-SEP-AIRRSG3CIF42U3PX  all  --  0.0.0.0/0            0.0.0.0/0            /* default/nginx:web */
+
+Chain KUBE-SEP-GL2BLSI2B4ICU6WH <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target          prot opt <span class="token function">source</span>               destination
+DNAT            tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/nginx:web */ tcp to:10.244.3.181:80
+
+Chain KUBE-SEP-AIRRSG3CIF42U3PX <span class="token punctuation">(</span>1 references<span class="token punctuation">)</span>
+target          prot opt <span class="token function">source</span>               destination
+DNAT            tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/nginx:web */ tcp to:10.244.3.182:80</code></pre>
+<h3 id="进一步重新构造-iptables-规则"><a href="#进一步重新构造-iptables-规则" class="headerlink" title="进一步重新构造 iptables 规则"></a>进一步重新构造 iptables 规则</h3><p>TODO：为来自集群外部的流量添加规则。</p>
+<h2 id="实现：通过-ipvs-实现-proxy"><a href="#实现：通过-ipvs-实现-proxy" class="headerlink" title="实现：通过 ipvs 实现 proxy"></a>实现：通过 ipvs 实现 proxy</h2><p>虽然基于 iptables 的代理在性能上优于基于用户空间的代理，但在集群服务过多的情况下也会导致性能严重下降 [6,7]。</p>
+<p>本质上，这是因为 iptables 判决是基于链的，它是一个复杂度为 O(n) 的线性算法。iptables 的一个好的替代方案是 IPVS——内核中的 L4 负载均衡器，它在底层使用 ipset（哈希实现），因此复杂度为 O(1)。</p>
+<p>让我们看看如何使用 ipvs 实现相同的目标。</p>
+<blockquote>
+<p>注意：在继续之前，请确保删除了在上一节中添加的所有规则。</p>
+</blockquote>
+<h3 id="安装-IPVS"><a href="#安装-IPVS" class="headerlink" title="安装 IPVS"></a>安装 IPVS</h3><pre class=" language-bash"><code class="language-bash">$ yum <span class="token function">install</span> -y ipvsadm
+
+<span class="token comment" spellcheck="true"># -l  list load balancing status</span>
+<span class="token comment" spellcheck="true"># -n  numeric output</span>
+$ ipvsadm -ln
+Prot LocalAddress:Port Scheduler Flags
+  -<span class="token operator">></span> RemoteAddress:Port           Forward Weight ActiveConn InActConn</code></pre>
+<p>默认无规则</p>
+<h4 id="增加虚拟-真正的-services"><a href="#增加虚拟-真正的-services" class="headerlink" title="增加虚拟/真正的 services"></a>增加虚拟/真正的 services</h4><p>使用 ipvs 实现负载均衡：</p>
+<pre class=" language-bash"><code class="language-bash"><span class="token comment" spellcheck="true"># -A/--add-service           add service</span>
+<span class="token comment" spellcheck="true"># -t/--tcp-service &lt;address> VIP + Port</span>
+<span class="token comment" spellcheck="true"># -s &lt;method>                scheduling-method</span>
+<span class="token comment" spellcheck="true"># -r/--real-server &lt;address> real backend IP + Port</span>
+<span class="token comment" spellcheck="true"># -m                         masquerading (NAT)</span>
+$ ipvsadm -A -t <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span> -s rr
+$ ipvsadm -a -t <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span> -r <span class="token variable">$POD1_IP</span> -m
+$ ipvsadm -a -t <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span> -r <span class="token variable">$POD2_IP</span> -m</code></pre>
+<p>或者使用我的脚本：</p>
+<pre class=" language-bash"><code class="language-bash">$ ./ipvs-add-server.sh
+Adding virtual server CLUSTER_IP:PORT<span class="token operator">=</span>10.7.111.132:80 <span class="token punctuation">..</span>.
+Adding real servers <span class="token punctuation">..</span>.
+10.7.111.132:80 -<span class="token operator">></span> 10.5.41.204
+10.7.111.132:80 -<span class="token operator">></span> 10.5.41.5
+Done</code></pre>
+<p>再次检查状态：</p>
+<pre class=" language-bash"><code class="language-bash">$ ipvsadm -ln
+Prot LocalAddress:Port Scheduler Flags
+  -<span class="token operator">></span> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  10.7.111.132:80 rr
+  -<span class="token operator">></span> 10.5.41.5:80                 Masq    1      0          0
+  -<span class="token operator">></span> 10.5.41.204:80               Masq    1      0          0</code></pre>
+<p>一些解释：</p>
+<ul>
+<li>对于所有发往 <code>10.7.111.132:80</code> 的流量，将负载均衡到 <code>10.5.41.5:80</code> 和 <code>10.5.41.204:80</code></li>
+<li>使用轮询 (rr) 算法实现负载均衡</li>
+<li>两个后端，每个后端的权重为 1（各 50％）</li>
+<li>使用 MASQ（增强型 SNAT）在 VIP 和 RealIP 之间进行流量转发</li>
+</ul>
+<h3 id="验证-1"><a href="#验证-1" class="headerlink" title="验证"></a>验证</h3><pre class=" language-bash"><code class="language-bash">$ <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token punctuation">{</span>1<span class="token punctuation">..</span>8<span class="token punctuation">}</span><span class="token punctuation">;</span> <span class="token keyword">do</span> curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span> 2<span class="token operator">></span><span class="token operator">&amp;</span>1 <span class="token operator">></span>/dev/null<span class="token punctuation">;</span> <span class="token function">sleep</span> 1<span class="token punctuation">;</span> <span class="token keyword">done</span>
+
+$ tcpdump -nn -i eth0 port <span class="token variable">$PORT</span> <span class="token operator">|</span> <span class="token function">grep</span> <span class="token string">"HTTP: GET"</span>
+IP 10.21.0.7.49556 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49558 <span class="token operator">></span> 10.5.41.5.80  <span class="token keyword">:</span> <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49560 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49562 <span class="token operator">></span> 10.5.41.5.80  <span class="token keyword">:</span> <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49566 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49568 <span class="token operator">></span> 10.5.41.5.80  <span class="token keyword">:</span> <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49570 <span class="token operator">></span> 10.5.41.204.80: <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1
+IP 10.21.0.7.49572 <span class="token operator">></span> 10.5.41.5.80  <span class="token keyword">:</span> <span class="token punctuation">..</span>. HTTP: GET / HTTP/1.1</code></pre>
+<p>完美！</p>
+<h3 id="清理-2"><a href="#清理-2" class="headerlink" title="清理"></a>清理</h3><pre class=" language-bash"><code class="language-bash">$ ./ipvs-del-server.sh
+Deleting real servers <span class="token punctuation">..</span>.
+10.7.111.132:80 -<span class="token operator">></span> 10.5.41.204
+10.7.111.132:80 -<span class="token operator">></span> 10.5.41.5
+Deleting virtual server CLUSTER_IP:PORT<span class="token operator">=</span>10.7.111.132:80 <span class="token punctuation">..</span>.
+Done</code></pre>
+<h2 id="实现：通过-bpf-实现-proxy"><a href="#实现：通过-bpf-实现-proxy" class="headerlink" title="实现：通过 bpf 实现 proxy"></a>实现：通过 bpf 实现 proxy</h2><p>这也是一个 <code>O(1)</code> 代理，但是与 IPVS 相比具有更高的性能。</p>
+<p>让我们看看如何在不到 100 行 C 代码中使用 eBPF 实现代理功能。</p>
+<h3 id="先决条件"><a href="#先决条件" class="headerlink" title="先决条件"></a>先决条件</h3><p>如果你有足够的时间和兴趣来阅读 eBPF/BPF，可以考虑阅读 <a href="https://docs.cilium.io/en/v1.6/bpf/" target="_blank" rel="noopener">Cilium: BPF and XDP Reference Guide</a>，它对开发人员来说是一个完美的 BPF 文档。</p>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>让我们看看出口部分的基本概念：</p>
+<ol>
+<li>对于所有流量，匹配 <code>dst=CLUSTER_IP &amp;&amp; proto==TCP &amp;&amp; dport==80</code></li>
+<li>更改目标 IP：<code>CLUSTER_IP -&gt; POD_IP</code></li>
+<li>更新 IP 和 TCP 报头中的校验和文件（否则我们的数据包将被丢弃）</li>
+</ol>
+<pre class=" language-c"><code class="language-c"><span class="token function">__section</span><span class="token punctuation">(</span><span class="token string">"egress"</span><span class="token punctuation">)</span>
+<span class="token keyword">int</span> <span class="token function">tc_egress</span><span class="token punctuation">(</span><span class="token keyword">struct</span> __sk_buff <span class="token operator">*</span>skb<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">const</span> __be32 cluster_ip <span class="token operator">=</span> <span class="token number">0x846F070A</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 10.7.111.132</span>
+    <span class="token keyword">const</span> __be32 pod_ip <span class="token operator">=</span> <span class="token number">0x0529050A</span><span class="token punctuation">;</span>     <span class="token comment" spellcheck="true">// 10.5.41.5</span>
+
+    <span class="token keyword">const</span> <span class="token keyword">int</span> l3_off <span class="token operator">=</span> ETH_HLEN<span class="token punctuation">;</span>    <span class="token comment" spellcheck="true">// IP header offset</span>
+    <span class="token keyword">const</span> <span class="token keyword">int</span> l4_off <span class="token operator">=</span> l3_off <span class="token operator">+</span> <span class="token number">20</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// TCP header offset: l3_off + sizeof(struct iphdr)</span>
+    __be32 sum<span class="token punctuation">;</span>                     <span class="token comment" spellcheck="true">// IP checksum</span>
+
+    <span class="token keyword">void</span> <span class="token operator">*</span>data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-></span>data<span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token operator">*</span>data_end <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-></span>data_end<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>data_end <span class="token operator">&lt;</span> data <span class="token operator">+</span> l4_off<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment" spellcheck="true">// not our packet</span>
+        <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">struct</span> iphdr <span class="token operator">*</span>ip4 <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">struct</span> iphdr <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>data <span class="token operator">+</span> l3_off<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>ip4<span class="token operator">-></span>daddr <span class="token operator">!=</span> cluster_ip <span class="token operator">||</span> ip4<span class="token operator">-></span>protocol <span class="token operator">!=</span> IPPROTO_TCP <span class="token comment" spellcheck="true">/* || tcp->dport == 80 */</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment" spellcheck="true">// DNAT: cluster_ip -> pod_ip, then update L3 and L4 checksum</span>
+    sum <span class="token operator">=</span> <span class="token function">csum_diff</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>ip4<span class="token operator">-></span>daddr<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>pod_ip<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">skb_store_bytes</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> l3_off <span class="token operator">+</span> <span class="token function">offsetof</span><span class="token punctuation">(</span><span class="token keyword">struct</span> iphdr<span class="token punctuation">,</span> daddr<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>pod_ip<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">l3_csum_replace</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> l3_off <span class="token operator">+</span> <span class="token function">offsetof</span><span class="token punctuation">(</span><span class="token keyword">struct</span> iphdr<span class="token punctuation">,</span> check<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> sum<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">l4_csum_replace</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> l4_off <span class="token operator">+</span> <span class="token function">offsetof</span><span class="token punctuation">(</span><span class="token keyword">struct</span> tcphdr<span class="token punctuation">,</span> check<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> sum<span class="token punctuation">,</span> BPF_F_PSEUDO_HDR<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>对于入口部分，非常类似于出口代码：</p>
+<pre class=" language-c"><code class="language-c"><span class="token function">__section</span><span class="token punctuation">(</span><span class="token string">"ingress"</span><span class="token punctuation">)</span>
+<span class="token keyword">int</span> <span class="token function">tc_ingress</span><span class="token punctuation">(</span><span class="token keyword">struct</span> __sk_buff <span class="token operator">*</span>skb<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">const</span> __be32 cluster_ip <span class="token operator">=</span> <span class="token number">0x846F070A</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// 10.7.111.132</span>
+    <span class="token keyword">const</span> __be32 pod_ip <span class="token operator">=</span> <span class="token number">0x0529050A</span><span class="token punctuation">;</span>     <span class="token comment" spellcheck="true">// 10.5.41.5</span>
+
+    <span class="token keyword">const</span> <span class="token keyword">int</span> l3_off <span class="token operator">=</span> ETH_HLEN<span class="token punctuation">;</span>    <span class="token comment" spellcheck="true">// IP header offset</span>
+    <span class="token keyword">const</span> <span class="token keyword">int</span> l4_off <span class="token operator">=</span> l3_off <span class="token operator">+</span> <span class="token number">20</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">// TCP header offset: l3_off + sizeof(struct iphdr)</span>
+    __be32 sum<span class="token punctuation">;</span>                     <span class="token comment" spellcheck="true">// IP checksum</span>
+
+    <span class="token keyword">void</span> <span class="token operator">*</span>data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-></span>data<span class="token punctuation">;</span>
+    <span class="token keyword">void</span> <span class="token operator">*</span>data_end <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-></span>data_end<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>data_end <span class="token operator">&lt;</span> data <span class="token operator">+</span> l4_off<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment" spellcheck="true">// not our packet</span>
+        <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">struct</span> iphdr <span class="token operator">*</span>ip4 <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">struct</span> iphdr <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>data <span class="token operator">+</span> l3_off<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>ip4<span class="token operator">-></span>saddr <span class="token operator">!=</span> pod_ip <span class="token operator">||</span> ip4<span class="token operator">-></span>protocol <span class="token operator">!=</span> IPPROTO_TCP <span class="token comment" spellcheck="true">/* || tcp->dport == 80 */</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment" spellcheck="true">// SNAT: pod_ip -> cluster_ip, then update L3 and L4 header</span>
+    sum <span class="token operator">=</span> <span class="token function">csum_diff</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>ip4<span class="token operator">-></span>saddr<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>cluster_ip<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">skb_store_bytes</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> l3_off <span class="token operator">+</span> <span class="token function">offsetof</span><span class="token punctuation">(</span><span class="token keyword">struct</span> iphdr<span class="token punctuation">,</span> saddr<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token operator">&amp;</span>cluster_ip<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">l3_csum_replace</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> l3_off <span class="token operator">+</span> <span class="token function">offsetof</span><span class="token punctuation">(</span><span class="token keyword">struct</span> iphdr<span class="token punctuation">,</span> check<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> sum<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">l4_csum_replace</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> l4_off <span class="token operator">+</span> <span class="token function">offsetof</span><span class="token punctuation">(</span><span class="token keyword">struct</span> tcphdr<span class="token punctuation">,</span> check<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> sum<span class="token punctuation">,</span> BPF_F_PSEUDO_HDR<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">char</span> __license<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token function">__section</span><span class="token punctuation">(</span><span class="token string">"license"</span><span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token string">"GPL"</span><span class="token punctuation">;</span></code></pre>
+<h3 id="编译并加载到内核中"><a href="#编译并加载到内核中" class="headerlink" title="编译并加载到内核中"></a>编译并加载到内核中</h3><p>现在使用我的小脚本编译和加载到内核：</p>
+<pre class=" language-bash"><code class="language-bash">$ ./compile-and-load.sh
+<span class="token punctuation">..</span>.
+++ <span class="token function">sudo</span> tc filter show dev eth0 egress
+filter protocol all pref 49152 bpf chain 0
+filter protocol all pref 49152 bpf chain 0 handle 0x1 toy-proxy-bpf.o:<span class="token punctuation">[</span>egress<span class="token punctuation">]</span> direct-action not_in_hw <span class="token function">id</span> 18 tag f5f39a21730006aa jited
+
+++ <span class="token function">sudo</span> tc filter show dev eth0 ingress
+filter protocol all pref 49152 bpf chain 0
+filter protocol all pref 49152 bpf chain 0 handle 0x1 toy-proxy-bpf.o:<span class="token punctuation">[</span>ingress<span class="token punctuation">]</span> direct-action not_in_hw <span class="token function">id</span> 19 tag b41159c5873bcbc9 jited</code></pre>
+<p>脚本是这样的：</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">cat</span> compile-and-load.sh
+<span class="token keyword">set</span> -x
+
+NIC<span class="token operator">=</span>eth0
+
+<span class="token comment" spellcheck="true"># compile c code into bpf code</span>
+clang -O2 -Wall -c toy-proxy-bpf.c -target bpf -o toy-proxy-bpf.o
+
+<span class="token comment" spellcheck="true"># add tc queuing discipline (egress and ingress buffer)</span>
+<span class="token function">sudo</span> tc qdisc del dev <span class="token variable">$NIC</span> clsact 2<span class="token operator">></span><span class="token operator">&amp;</span>1 <span class="token operator">></span>/dev/null
+<span class="token function">sudo</span> tc qdisc add dev <span class="token variable">$NIC</span> clsact
+
+<span class="token comment" spellcheck="true"># load bpf code into the tc egress and ingress hook respectively</span>
+<span class="token function">sudo</span> tc filter add dev <span class="token variable">$NIC</span> egress bpf da obj toy-proxy-bpf.o sec egress
+<span class="token function">sudo</span> tc filter add dev <span class="token variable">$NIC</span> ingress bpf da obj toy-proxy-bpf.o sec ingress
+
+<span class="token comment" spellcheck="true"># show info</span>
+<span class="token function">sudo</span> tc filter show dev <span class="token variable">$NIC</span> egress
+<span class="token function">sudo</span> tc filter show dev <span class="token variable">$NIC</span> ingress</code></pre>
+<h3 id="验证-2"><a href="#验证-2" class="headerlink" title="验证"></a>验证</h3><pre class=" language-bash"><code class="language-bash">$ curl <span class="token variable">$CLUSTER_IP</span><span class="token keyword">:</span><span class="token variable">$PORT</span>
+<span class="token operator">&lt;</span><span class="token operator">!</span>DOCTYPE html<span class="token operator">></span>
+<span class="token punctuation">..</span>.
+<span class="token operator">&lt;</span>/html<span class="token operator">></span></code></pre>
+<p>完美！</p>
+<h3 id="清理-3"><a href="#清理-3" class="headerlink" title="清理"></a>清理</h3><pre class=" language-bash"><code class="language-bash">$ <span class="token function">sudo</span> tc qdisc del dev <span class="token variable">$NIC</span> clsact 2<span class="token operator">></span><span class="token operator">&amp;</span>1 <span class="token operator">></span>/dev/null</code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在这篇文章中，我们用不同的方法手工实现了 <code>kube-proxy</code> 的核心功能。希望你现在对 kubernetes 节点代理有了更好的理解，以及关于网络的其他一些配置。</p>
+<p>在这篇文章中使用的代码和脚本：<a href="/images/code/kube-proxy.zip">这里</a>。</p>
+<h3 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h3><ol>
+<li><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/" target="_blank" rel="noopener">Kubernetes Doc: CLI - kube-proxy</a></li>
+<li><a href="https://github.com/kubernetes/enhancements/blob/master/keps/sig-network/0011-ipvs-proxier.md" target="_blank" rel="noopener">kubernetes/enhancements: enhancements/0011-ipvs-proxier.md</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types" target="_blank" rel="noopener">Kubernetes Doc: Service types</a></li>
+<li><a href="https://kubernetes.io/docs/concepts/cluster-administration/proxies/" target="_blank" rel="noopener">Proxies in Kubernetes - Kubernetes</a></li>
+<li><a href="https://medium.com/@benmeier_/a-quick-minimal-ipvs-load-balancer-demo-d5cc42d0deb4" target="_blank" rel="noopener">A minimal IPVS Load Balancer demo</a></li>
+<li><a href="https://docs.google.com/presentation/d/1BaIAywY2qqeHtyGZtlyAp89JIZs59MZLKcFLxKE6LyM/edit#slide=id.p3" target="_blank" rel="noopener">Scaling Kubernetes to Support 50,000 Services</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/37230013" target="_blank" rel="noopener">华为云在 K8S 大规模场景下的 Service 性能优化实践</a></li>
+</ol>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>webapp.yaml:</p>
+<pre class=" language-yaml"><code class="language-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> webapp
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> webapp
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">80</span>
+    <span class="token key atrule">name</span><span class="token punctuation">:</span> web
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">app</span><span class="token punctuation">:</span> webapp
+<span class="token punctuation">---</span>
+<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> apps/v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> StatefulSet
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> webapp
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">serviceName</span><span class="token punctuation">:</span> <span class="token string">"webapp"</span>
+  <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">1</span>
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">matchLabels</span><span class="token punctuation">:</span>
+      <span class="token key atrule">app</span><span class="token punctuation">:</span> webapp
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+      <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+        <span class="token key atrule">app</span><span class="token punctuation">:</span> webapp
+    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
+      <span class="token comment" spellcheck="true"># affinity:</span>
+      <span class="token comment" spellcheck="true">#   nodeAffinity:</span>
+      <span class="token comment" spellcheck="true">#     requiredDuringSchedulingIgnoredDuringExecution:</span>
+      <span class="token comment" spellcheck="true">#       nodeSelectorTerms:</span>
+      <span class="token comment" spellcheck="true">#       - matchExpressions:</span>
+      <span class="token comment" spellcheck="true">#         - key: kubernetes.io/hostname</span>
+      <span class="token comment" spellcheck="true">#           operator: In</span>
+      <span class="token comment" spellcheck="true">#           values:</span>
+      <span class="token comment" spellcheck="true">#           - node1</span>
+      <span class="token key atrule">tolerations</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">effect</span><span class="token punctuation">:</span> NoSchedule
+        <span class="token key atrule">key</span><span class="token punctuation">:</span> smoke
+        <span class="token key atrule">operator</span><span class="token punctuation">:</span> Equal
+        <span class="token key atrule">value</span><span class="token punctuation">:</span> test
+      <span class="token key atrule">containers</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> webapp
+        <span class="token key atrule">image</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>slim<span class="token punctuation">:</span><span class="token number">0.8</span>
+        <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> <span class="token key atrule">containerPort</span><span class="token punctuation">:</span> <span class="token number">80</span>
+          <span class="token key atrule">name</span><span class="token punctuation">:</span> web</code></pre>
+<script>
+        document.querySelectorAll('.github-emoji')
+          .forEach(el => {
+            if (!el.dataset.src) { return; }
+            const img = document.createElement('img');
+            img.style = 'display:none !important;';
+            img.src = el.dataset.src;
+            img.addEventListener('error', () => {
+              img.remove();
+              el.style.color = 'inherit';
+              el.style.backgroundImage = 'none';
+              el.style.background = 'none';
+            });
+            img.addEventListener('load', () => {
+              img.remove();
+            });
+            document.body.appendChild(img);
+          });
+      </script>
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">Rootkit</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="http://xipfs.github.io/2020/11/02/k8s05/">http://xipfs.github.io/2020/11/02/k8s05/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">Rootkit</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            
+                                <a href="/tags/Kubernetes/">
+                                    <span class="chip bg-color">Kubernetes</span>
+                                </a>
+                            
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <style>
+    #reward {
+        margin: 40px 0;
+        text-align: center;
+    }
+
+    #reward .reward-link {
+        font-size: 1.4rem;
+        line-height: 38px;
+    }
+
+    #reward .btn-floating:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #rewardModal {
+        width: 320px;
+        height: 350px;
+    }
+
+    #rewardModal .reward-title {
+        margin: 15px auto;
+        padding-bottom: 5px;
+    }
+
+    #rewardModal .modal-content {
+        padding: 10px;
+    }
+
+    #rewardModal .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 1.3rem;
+        line-height: 20px;
+        cursor: pointer;
+    }
+
+    #rewardModal .close:hover {
+        color: #ef5350;
+        transform: scale(1.3);
+        -moz-transform:scale(1.3);
+        -webkit-transform:scale(1.3);
+        -o-transform:scale(1.3);
+    }
+
+    #rewardModal .reward-tabs {
+        margin: 0 auto;
+        width: 210px;
+    }
+
+    .reward-tabs .tabs {
+        height: 38px;
+        margin: 10px auto;
+        padding-left: 0;
+    }
+
+    .reward-content ul {
+        padding-left: 0 !important;
+    }
+
+    .reward-tabs .tabs .tab {
+        height: 38px;
+        line-height: 38px;
+    }
+
+    .reward-tabs .tab a {
+        color: #fff;
+        background-color: #ccc;
+    }
+
+    .reward-tabs .tab a:hover {
+        background-color: #ccc;
+        color: #fff;
+    }
+
+    .reward-tabs .wechat-tab .active {
+        color: #fff !important;
+        background-color: #22AB38 !important;
+    }
+
+    .reward-tabs .alipay-tab .active {
+        color: #fff !important;
+        background-color: #019FE8 !important;
+    }
+
+    .reward-tabs .reward-img {
+        width: 210px;
+        height: 210px;
+    }
+</style>
+
+<div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
+            <div class="card">
+                <a href="/2020/11/02/k8s05/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="深入理解 Kubernetes 网络模型 自己实现 kube-proxy 的功能">
+                        
+                        <span class="card-title">深入理解 Kubernetes 网络模型 自己实现 kube-proxy 的功能</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            深入理解 Kubernetes 网络模型：DIY kube-proxyKubernetes 中有几种类型的代理。其中有 node proxier 或 kube-proxy，它在每个节点上反映 Kubernetes API 中定义的服务，可以
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-11-02
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Kubernetes/" class="post-category">
+                                    Kubernetes
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/Kubernetes/">
+                        <span class="chip bg-color">Kubernetes</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2020/07/21/database/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="数据库学习指南">
+                        
+                        <span class="card-title">数据库学习指南</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            DatabasesGeneral
+ 🎥 CMU 15-445 Intro to Database Systems (A Pavlo 2019)
+ 🎥 CMU 15-721 Advanced Database Systems (A Pav
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-07-21
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Database/" class="post-category">
+                                    Database
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/Database/">
+                        <span class="chip bg-color">Database</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+<!-- 代码块折行 -->
+
+<style type="text/css">
+code[class*="language-"], pre[class*="language-"] { white-space: pre !important; }
+</style>
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // modify the toc link href to support Chinese.
+        let i = 0;
+        let tocHeading = 'toc-heading-';
+        $('#toc-content a').each(function () {
+            $(this).attr('href', '#' + tocHeading + (++i));
+        });
+
+        // modify the heading title id to support Chinese.
+        i = 0;
+        $('#articleContent').children('h2, h3, h4').each(function () {
+            $(this).attr('id', tocHeading + (++i));
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="868680226"
+                   fixed='true'
+                   autoplay='true'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+    
+    <div class="container row center-align" style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            <span id="year">2019</span>
+            <a href="/about" target="_blank">rootkit</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            <br>
+            
+            &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
+                class="white-color">88.6k</span>&nbsp;字
+            
+            
+            
+            
+            
+            
+            <span id="busuanzi_container_site_pv">
+                |&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;<span id="busuanzi_value_site_pv"
+                    class="white-color"></span>&nbsp;次
+            </span>
+            
+            
+            <span id="busuanzi_container_site_uv">
+                |&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;<span id="busuanzi_value_site_uv"
+                    class="white-color"></span>&nbsp;人
+            </span>
+            
+            <br>
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/xipfs" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:flexie@foxmail.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=514591940" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 514591940" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script src="/js/search.js"></script>
+<script type="text/javascript">
+$(function () {
+    searchFunc("/search.xml", 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>

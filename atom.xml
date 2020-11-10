@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://xipfs.github.io/"/>
-  <updated>2020-07-21T11:02:42.237Z</updated>
+  <updated>2020-11-10T03:24:14.921Z</updated>
   <id>http://xipfs.github.io/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>深入理解 Kubernetes 网络模型 自己实现 kube-proxy 的功能</title>
+    <link href="http://xipfs.github.io/2020/11/02/k8s05/"/>
+    <id>http://xipfs.github.io/2020/11/02/k8s05/</id>
+    <published>2020-11-02T07:27:50.000Z</published>
+    <updated>2020-11-10T03:24:14.921Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;h2 id=&quot;深入理解-Kubernetes-网络模型：DIY-kube-proxy&quot;&gt;&lt;a href=&quot;#深入理解-Kubernetes-网络模型：DIY-kube-proxy&quot; class=&quot;headerlink&quot; title=&quot;深入理解 Kubernetes
+        
+      
+    
+    </summary>
+    
+    
+      <category term="Kubernetes" scheme="http://xipfs.github.io/categories/Kubernetes/"/>
+    
+    
+      <category term="Kubernetes" scheme="http://xipfs.github.io/tags/Kubernetes/"/>
+    
+  </entry>
   
   <entry>
     <title>数据库学习指南</title>
