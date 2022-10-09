@@ -4,14 +4,19 @@
   <meta charset="utf-8">
   
   
-  <title>标签: blockchain eth solidity foundry | TYPEOF</title>
+  <title>solidity 优化 | TYPEOF</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="TYPEOF">
-<meta property="og:url" content="http://xipfs.github.io/tags/blockchain-eth-solidity-foundry/index.html">
+  <meta name="description" content="Gas 优化优化前 1234uint256 _arrayLength &#x3D; _accounts.length;for (uint256 i; i &lt; _arrayLength; ++i) &amp;#123;	_resetIndexToAccountToIncluded[_resetIndex][_accounts[i]] &#x3D; _included[i];&amp;#125;  优化后 1234567uint2">
+<meta property="og:type" content="article">
+<meta property="og:title" content="solidity 优化">
+<meta property="og:url" content="http://xipfs.github.io/2022/10/09/sol001/index.html">
 <meta property="og:site_name" content="TYPEOF">
+<meta property="og:description" content="Gas 优化优化前 1234uint256 _arrayLength &#x3D; _accounts.length;for (uint256 i; i &lt; _arrayLength; ++i) &amp;#123;	_resetIndexToAccountToIncluded[_resetIndex][_accounts[i]] &#x3D; _included[i];&amp;#125;  优化后 1234567uint2">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-09T08:21:35.000Z">
+<meta property="article:modified_time" content="2022-10-09T03:30:02.329Z">
 <meta property="article:author" content="Rootkits">
+<meta property="article:tag" content="solidity">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternate" href="/atom.xml" title="TYPEOF" type="application/atom+xml">
@@ -73,39 +78,60 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/05/24/eth001/" class="archive-article-date">
-  <time class="dt-published" datetime="2022-05-24T08:21:35.000Z" itemprop="datePublished">5月 24</time>
+        <section id="main"><article id="post-sol001" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/10/09/sol001/" class="article-date">
+  <time class="dt-published" datetime="2022-10-09T08:21:35.000Z" itemprop="datePublished">2022-10-09</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/05/24/eth001/">如何使用 foundry 编写合约</a>
+    <h1 class="p-name article-title" itemprop="headline name">
+      solidity 优化
     </h1>
   
 
-    </header>
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="Gas-优化"><a href="#Gas-优化" class="headerlink" title="Gas 优化"></a>Gas 优化</h2><p><strong>优化前</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">uint256 _arrayLength = _accounts.length;</span><br><span class="line">for (uint256 i; i &lt; _arrayLength; ++i) &#123;</span><br><span class="line">	_resetIndexToAccountToIncluded[_resetIndex][_accounts[i]] = _included[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>优化后</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">uint256 _arrayLength = _accounts.length;</span><br><span class="line">for (uint256 i; i &lt; _arrayLength; ) &#123;</span><br><span class="line">	_resetIndexToAccountToIncluded[_resetIndex][_accounts[i]] = _included[i];</span><br><span class="line">	unchecked &#123;</span><br><span class="line">		++i;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xipfs.github.io/2022/10/09/sol001/" data-id="cl90sew2x0000c4sy88ba698f" data-title="solidity 优化" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/solidity/" rel="tag">solidity</a></li></ul>
+
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2022/05/24/eth001/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">如何使用 foundry 编写合约</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 
 </section>
